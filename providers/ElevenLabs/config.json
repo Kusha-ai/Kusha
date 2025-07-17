@@ -1,0 +1,98 @@
+{
+  "provider": {
+    "id": "elevenlabs",
+    "name": "ElevenLabs",
+    "description": "ElevenLabs speech-to-text service",
+    "base_url": "https://api.elevenlabs.io/v1",
+    "requires_api_key": true,
+    "api_key_type": "string"
+  },
+  "models": [
+    {
+      "id": "scribe_v1",
+      "name": "ElevenLabs Scribe v1",
+      "description": "ElevenLabs Scribe speech-to-text model v1 with multilingual support",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "hi-IN", "ja-JP", "ko-KR", "zh-CN"],
+      "features": ["Multilingual", "High accuracy", "Speaker diarization", "Timestamps"]
+    },
+    {
+      "id": "scribe_v1_experimental",
+      "name": "ElevenLabs Scribe v1 Experimental", 
+      "description": "ElevenLabs Scribe speech-to-text model v1 experimental version",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "hi-IN", "ja-JP", "ko-KR", "zh-CN"],
+      "features": ["Multilingual", "Experimental features", "Enhanced accuracy", "Latest improvements"]
+    }
+  ],
+  "languages": {
+    "en-US": {
+      "name": "English (United States)",
+      "flag": "🇺🇸",
+      "region": "North America"
+    },
+    "en-GB": {
+      "name": "English (United Kingdom)",
+      "flag": "🇬🇧",
+      "region": "Europe"
+    },
+    "en-IN": {
+      "name": "English (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "hi-IN": {
+      "name": "Hindi (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "es-ES": {
+      "name": "Spanish (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "fr-FR": {
+      "name": "French (France)",
+      "flag": "🇫🇷",
+      "region": "Europe"
+    },
+    "de-DE": {
+      "name": "German (Germany)",
+      "flag": "🇩🇪",
+      "region": "Europe"
+    },
+    "it-IT": {
+      "name": "Italian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "pt-BR": {
+      "name": "Portuguese (Brazil)",
+      "flag": "🇧🇷",
+      "region": "South America"
+    },
+    "ru-RU": {
+      "name": "Russian (Russia)",
+      "flag": "🇷🇺",
+      "region": "Europe"
+    },
+    "ja-JP": {
+      "name": "Japanese (Japan)",
+      "flag": "🇯🇵",
+      "region": "Asia"
+    },
+    "ko-KR": {
+      "name": "Korean (South Korea)",
+      "flag": "🇰🇷",
+      "region": "Asia"
+    },
+    "zh-CN": {
+      "name": "Chinese (Simplified)",
+      "flag": "🇨🇳",
+      "region": "Asia"
+    },
+    "ar-SA": {
+      "name": "Arabic (Saudi Arabia)",
+      "flag": "🇸🇦",
+      "region": "Middle East"
+    }
+  }
+}

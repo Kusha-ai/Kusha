@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}ASR Speed Test - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-cog"></i> Admin Panel</h1>
+            <div class="text-muted">
+                <i class="fas fa-user"></i> {{ admin_user }}
+            </div>
+        </div>
+        
+        <!-- API Keys Configuration -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-key"></i> API Key Management</h5>
+            </div>
+            <div class="card-body">
+                <form id="apiKeyForm">
+                    {% for key, name in providers.items() %}
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label"><strong>{{ name }}</strong></label>
+                        </div>
+                        <div class="col-md-7">
+                            {% if key == 'google' %}
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="api_key_{{ key }}" 
+                                           placeholder="JSON file path or JSON content" 
+                                           value="{{ api_keys.get(key, '') }}">
+                                    <button type="button" class="btn btn-outline-secondary" 
+                                            onclick="selectJsonFile('{{ key }}')">
+                                        <i class="fas fa-file"></i> Browse JSON
+                                    </button>
+                                </div>
+                            {% elif key == 'sarv' %}
+                                <input type="text" class="form-control" id="api_key_{{ key }}" 
+                                       placeholder="Service URL (e.g., http://103.255.103.118:5001)" 
+                                       value="{{ api_keys.get(key, 'http://103.255.103.118:5001') }}">
+                            {% else %}
+                                <input type="password" class="form-control" id="api_key_{{ key }}" 
+                                       placeholder="Enter API key" 
+                                       value="{{ '***SAVED***' if api_keys.get(key) else '' }}">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary btn-sm" 
+                                    onclick="saveApiKey('{{ key }}')">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </form>
+                
+                <div class="mt-4">
+                    <button type="button" class="btn btn-success me-2" onclick="testAllConnections()">
+                        <i class="fas fa-plug"></i> Test All Connections
+                    </button>
+                    <button type="button" class="btn btn-info me-2" onclick="refreshAllModels()">
+                        <i class="fas fa-sync-alt"></i> Refresh All Models
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-wifi"></i> Connection Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="connectionStatus">
+                    <div class="text-muted">Click "Test All Connections" to check status</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Models -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-brain"></i> Available Models</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th>Model ID</th>
+                                <th>Model Name</th>
+                                <th>Language</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modelsTable">
+                            <tr>
+                                <td colspan="4" class="text-muted text-center">
+                                    Click "Refresh All Models" to load models
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Test Results -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Recent Test Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Provider</th>
+                                <th>Model</th>
+                                <th>Language</th>
+                                <th>Processing Time</th>
+                                <th>Transcription</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTable">
+                            <tr>
+                                <td colspan="6" class="text-muted text-center">
+                                    Loading recent results...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File input for JSON files -->
+<input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    loadRecentResults();
+    
+    // Setup file input handler
+    $('#jsonFileInput').change(function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const providerId = $('#jsonFileInput').data('provider');
+                $('#api_key_' + providerId).val(e.target.result);
+            };
+            reader.readAsText(file);
+        }
+    });
+});
+
+function selectJsonFile(provider) {
+    $('#jsonFileInput').data('provider', provider);
+    $('#jsonFileInput').click();
+}
+
+function saveApiKey(provider) {
+    const apiKey = $('#api_key_' + provider).val();
+    
+    if (!apiKey || apiKey === '***SAVED***') {
+        showAlert('Please enter a valid API key/URL', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('provider', provider);
+    formData.append('api_key', apiKey);
+    
+    $.ajax({
+        url: '/api/save-api-key',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            showAlert(response.message, 'success');
+            // Mark as saved for non-Sarv providers
+            if (provider !== 'sarv') {
+                $('#api_key_' + provider).val('***SAVED***');
+            }
+        },
+        error: function(xhr) {
+            showAlert('Error saving API key: ' + xhr.responseJSON.detail, 'danger');
+        }
+    });
+}
+
+function testAllConnections() {
+    const providers = {{ providers.keys() | list | tojson }};
+    const statusDiv = $('#connectionStatus');
+    
+    statusDiv.html('<div class="text-center"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Testing connections...</div></div>');
+    
+    let results = [];
+    let completed = 0;
+    
+    providers.forEach(function(provider) {
+        $.ajax({
+            url: '/api/test-connection/' + provider,
+            type: 'POST',
+            success: function(response) {
+                results.push({
+                    provider: provider,
+                    success: response.success,
+                    message: response.message
+                });
+                completed++;
+                
+                if (completed === providers.length) {
+                    displayConnectionResults(results);
+                }
+            },
+            error: function() {
+                results.push({
+                    provider: provider,
+                    success: false,
+                    message: 'Connection failed'
+                });
+                completed++;
+                
+                if (completed === providers.length) {
+                    displayConnectionResults(results);
+                }
+            }
+        });
+    });
+}
+
+function displayConnectionResults(results) {
+    let html = '';
+    
+    results.forEach(function(result) {
+        const badgeClass = result.success ? 'bg-success' : 'bg-danger';
+        html += `
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                <div>
+                    <strong>${result.provider}</strong>
+                    <span class="badge ${badgeClass} ms-2">${result.success ? 'OK' : 'FAILED'}</span>
+                </div>
+                <div class="text-muted">${result.message}</div>
+            </div>
+        `;
+    });
+    
+    $('#connectionStatus').html(html);
+}
+
+function refreshAllModels() {
+    const button = $('button[onclick="refreshAllModels()"]');
+    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Refreshing...');
+    
+    $.ajax({
+        url: '/api/refresh-models',
+        type: 'POST',
+        success: function(response) {
+            showAlert('Models refreshed successfully', 'success');
+            loadModels();
+            
+            // Show refresh results
+            let resultHtml = '<div class="alert alert-info"><strong>Refresh Results:</strong><ul>';
+            response.results.forEach(function(result) {
+                resultHtml += `<li>${result}</li>`;
+            });
+            resultHtml += '</ul></div>';
+            
+            $('#connectionStatus').html(resultHtml);
+        },
+        error: function(xhr) {
+            showAlert('Error refreshing models: ' + xhr.responseJSON.detail, 'danger');
+        },
+        complete: function() {
+            button.prop('disabled', false).html('<i class="fas fa-sync-alt"></i> Refresh All Models');
+        }
+    });
+}
+
+function loadModels() {
+    const providers = {{ providers.keys() | list | tojson }};
+    let allModels = [];
+    let completed = 0;
+    
+    providers.forEach(function(provider) {
+        $.get('/api/models/' + provider)
+            .done(function(data) {
+                data.models.forEach(function(model) {
+                    allModels.push({
+                        provider: provider,
+                        id: model.id,
+                        name: model.name,
+                        language: model.language_code || 'N/A'
+                    });
+                });
+            })
+            .always(function() {
+                completed++;
+                if (completed === providers.length) {
+                    displayModels(allModels);
+                }
+            });
+    });
+}
+
+function displayModels(models) {
+    const tableBody = $('#modelsTable');
+    
+    if (models.length === 0) {
+        tableBody.html('<tr><td colspan="4" class="text-muted text-center">No models available</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    models.forEach(function(model) {
+        html += `
+            <tr>
+                <td><span class="badge bg-primary">${model.provider}</span></td>
+                <td><code>${model.id}</code></td>
+                <td>${model.name}</td>
+                <td>${model.language}</td>
+            </tr>
+        `;
+    });
+    
+    tableBody.html(html);
+}
+
+function loadRecentResults() {
+    $.get('/api/test-results')
+        .done(function(data) {
+            const tableBody = $('#resultsTable');
+            
+            if (data.results.length === 0) {
+                tableBody.html('<tr><td colspan="6" class="text-muted text-center">No results yet</td></tr>');
+                return;
+            }
+            
+            let html = '';
+            data.results.forEach(function(result) {
+                const transcription = result.transcription.length > 50 ? 
+                    result.transcription.substring(0, 50) + '...' : 
+                    result.transcription;
+                
+                html += `
+                    <tr>
+                        <td><span class="badge bg-primary">${result.provider}</span></td>
+                        <td><code>${result.model_id}</code></td>
+                        <td>${result.language_code}</td>
+                        <td>${result.processing_time.toFixed(3)}s</td>
+                        <td>${transcription}</td>
+                        <td>${new Date(result.created_at).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.html(html);
+        });
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('.container').prepend(alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+        $('.alert').alert('close');
+    }, 5000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{
+  "provider": {
+    "id": "fireworks",
+    "name": "Fireworks AI Whisper",
+    "domain": "fireworks.ai",
+    "favicon": "https://fireworks.ai/favicon.ico",
+    "logo": "https://fireworks.ai/logo.svg",
+    "website": "https://fireworks.ai",
+    "description": "OpenAI Whisper models on fast inference infrastructure",
+    "requires_api_key": true,
+    "api_key_type": "string",
+    "api_key_description": "Fireworks API Key"
+  },
+  "models": [
+    {
+      "id": "accounts/fireworks/models/whisper-v3",
+      "name": "Whisper v3",
+      "description": "Latest OpenAI Whisper model with improved accuracy",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "ja-JP", "ko-KR", "zh-CN", "ar-SA", "ru-RU", "pt-BR", "nl-NL", "sv-SE", "da-DK", "no-NO", "fi-FI", "tr-TR", "uk-UA", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sr-RS", "sl-SI", "et-EE", "lv-LV", "lt-LT", "mt-MT", "cy-GB", "ga-IE", "is-IS", "mk-MK", "sq-AL", "eu-ES", "gl-ES", "ca-ES"]
+    },
+    {
+      "id": "accounts/fireworks/models/whisper-v3-turbo",
+      "name": "Whisper v3 Turbo",
+      "description": "Fast Whisper model optimized for speed",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "ja-JP", "ko-KR", "zh-CN", "ar-SA", "ru-RU", "pt-BR"]
+    }
+  ],
+  "languages": {
+    "en-US": {"name": "English (US)", "flag": "🇺🇸", "region": "North America"},
+    "en-GB": {"name": "English (UK)", "flag": "🇬🇧", "region": "Europe"},
+    "es-ES": {"name": "Spanish (Spain)", "flag": "🇪🇸", "region": "Europe"},
+    "fr-FR": {"name": "French (France)", "flag": "🇫🇷", "region": "Europe"},
+    "de-DE": {"name": "German (Germany)", "flag": "🇩🇪", "region": "Europe"},
+    "it-IT": {"name": "Italian (Italy)", "flag": "🇮🇹", "region": "Europe"},
+    "ja-JP": {"name": "Japanese (Japan)", "flag": "🇯🇵", "region": "Asia"},
+    "ko-KR": {"name": "Korean (Korea)", "flag": "🇰🇷", "region": "Asia"},
+    "zh-CN": {"name": "Chinese (China)", "flag": "🇨🇳", "region": "Asia"},
+    "ar-SA": {"name": "Arabic (Saudi Arabia)", "flag": "🇸🇦", "region": "Middle East"},
+    "ru-RU": {"name": "Russian (Russia)", "flag": "🇷🇺", "region": "Europe"},
+    "pt-BR": {"name": "Portuguese (Brazil)", "flag": "🇧🇷", "region": "South America"},
+    "nl-NL": {"name": "Dutch (Netherlands)", "flag": "🇳🇱", "region": "Europe"},
+    "sv-SE": {"name": "Swedish (Sweden)", "flag": "🇸🇪", "region": "Europe"},
+    "da-DK": {"name": "Danish (Denmark)", "flag": "🇩🇰", "region": "Europe"},
+    "no-NO": {"name": "Norwegian (Norway)", "flag": "🇳🇴", "region": "Europe"},
+    "fi-FI": {"name": "Finnish (Finland)", "flag": "🇫🇮", "region": "Europe"},
+    "tr-TR": {"name": "Turkish (Turkey)", "flag": "🇹🇷", "region": "Europe"}
+  }
+}

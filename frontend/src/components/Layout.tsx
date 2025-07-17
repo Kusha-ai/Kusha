@@ -1,0 +1,173 @@
+import React from 'react'
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Container,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material'
+import {
+  Mic as MicIcon,
+  Settings as SettingsIcon,
+  Analytics as AnalyticsIcon,
+  Menu as MenuIcon,
+} from '@mui/icons-material'
+import { useNavigate, useLocation } from 'react-router-dom'
+
+interface LayoutProps {
+  children: React.ReactNode
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
+  
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+  
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+  
+  const menuItems = [
+    { label: 'ASR Testing', path: '/', icon: <MicIcon /> },
+    { label: 'Results', path: '/results', icon: <AnalyticsIcon /> },
+    { label: 'Admin', path: '/admin', icon: <SettingsIcon /> },
+  ]
+  
+  const handleNavigation = (path: string) => {
+    navigate(path)
+    handleMenuClose()
+  }
+  
+  return (
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          color: 'primary.main',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <Toolbar>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <MicIcon sx={{ mr: 2, fontSize: '2rem', color: 'primary.main' }} />
+            <Typography
+              variant="h5"
+              component="div"
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                cursor: 'pointer',
+              }}
+              onClick={() => navigate('/')}
+            >
+              ASR Speed Test
+            </Typography>
+          </Box>
+          
+          {isMobile ? (
+            <>
+              <IconButton
+                edge="end"
+                color="primary"
+                onClick={handleMenuOpen}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                {menuItems.map((item) => (
+                  <MenuItem
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    selected={location.pathname === item.path}
+                    sx={{ minWidth: 150 }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {item.icon}
+                      {item.label}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Menu>
+            </>
+          ) : (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {menuItems.map((item) => (
+                <Button
+                  key={item.path}
+                  onClick={() => handleNavigation(item.path)}
+                  startIcon={item.icon}
+                  variant={location.pathname === item.path ? 'contained' : 'text'}
+                  sx={{
+                    color: location.pathname === item.path ? 'white' : 'primary.main',
+                    '&:hover': {
+                      backgroundColor: location.pathname === item.path 
+                        ? 'primary.dark' 
+                        : 'rgba(102, 126, 234, 0.1)',
+                    },
+                  }}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </Box>
+          )}
+        </Toolbar>
+      </AppBar>
+      
+      <Container 
+        maxWidth="xl" 
+        sx={{ 
+          flexGrow: 1, 
+          py: 4,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {children}
+      </Container>
+      
+      <Box
+        component="footer"
+        sx={{
+          py: 3,
+          px: 2,
+          mt: 'auto',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          color: 'white',
+          textAlign: 'center',
+        }}
+      >
+        <Typography variant="body2">
+          © 2025 ASR Speed Test - Modern speech recognition testing platform
+        </Typography>
+      </Box>
+    </Box>
+  )
+}
+
+export default Layout

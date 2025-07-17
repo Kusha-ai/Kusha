@@ -1,0 +1,145 @@
+{
+  "provider": {
+    "id": "sarv",
+    "name": "Sarv ASR",
+    "description": "Indian language ASR service with dual model support - Hindi-specific model for Hindi, multilingual model for other 22 Indian languages",
+    "base_url": "http://103.255.103.118:5001",
+    "requires_api_key": false,
+    "api_key_type": "none"
+  },
+  "models": [
+    {
+      "id": "hindi-specific",
+      "name": "Hindi Specific Model",
+      "description": "Hindi-specific model optimized for Hindi language (hi.nemo)",
+      "supported_languages": ["hi-IN"],
+      "features": ["Real-time", "Hindi-optimized", "High accuracy for Hindi"]
+    },
+    {
+      "id": "hindi-multilingual",
+      "name": "Hindi Multilingual Model", 
+      "description": "Multilingual model supporting Hindi (all_in.nemo)",
+      "supported_languages": ["hi-IN"],
+      "features": ["Real-time", "Multilingual", "Part of 22-language model"]
+    },
+    {
+      "id": "multilingual",
+      "name": "Multilingual Model",
+      "description": "Multilingual model supporting all 22 Indian languages (all_in.nemo)",
+      "supported_languages": ["as-IN", "bn-IN", "brx-IN", "doi-IN", "gu-IN", "kn-IN", "kok-IN", "ks-IN", "mai-IN", "ml-IN", "mni-IN", "mr-IN", "ne-IN", "or-IN", "pa-IN", "sa-IN", "sat-IN", "sd-IN", "ta-IN", "te-IN", "ur-IN"],
+      "features": ["Real-time", "22 Indian languages", "Multilingual support"]
+    }
+  ],
+  "languages": {
+    "hi-IN": {
+      "name": "Hindi",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "as-IN": {
+      "name": "Assamese",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "bn-IN": {
+      "name": "Bengali",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "brx-IN": {
+      "name": "Bodo",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "doi-IN": {
+      "name": "Dogri",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "gu-IN": {
+      "name": "Gujarati",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "kn-IN": {
+      "name": "Kannada",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "kok-IN": {
+      "name": "Konkani",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ks-IN": {
+      "name": "Kashmiri",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "mai-IN": {
+      "name": "Maithili",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ml-IN": {
+      "name": "Malayalam",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "mni-IN": {
+      "name": "Manipuri",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "mr-IN": {
+      "name": "Marathi",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ne-IN": {
+      "name": "Nepali",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "or-IN": {
+      "name": "Odia",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "pa-IN": {
+      "name": "Punjabi",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "sa-IN": {
+      "name": "Sanskrit",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "sat-IN": {
+      "name": "Santali",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "sd-IN": {
+      "name": "Sindhi",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ta-IN": {
+      "name": "Tamil",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "te-IN": {
+      "name": "Telugu",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ur-IN": {
+      "name": "Urdu",
+      "flag": "🇮🇳",
+      "region": "India"
+    }
+  }
+}

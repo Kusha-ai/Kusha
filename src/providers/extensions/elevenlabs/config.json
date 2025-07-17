@@ -1,0 +1,44 @@
+{
+  "provider": {
+    "id": "elevenlabs",
+    "name": "ElevenLabs ASR",
+    "domain": "elevenlabs.io",
+    "favicon": "https://elevenlabs.io/favicon.ico",
+    "logo": "https://elevenlabs.io/logo.svg",
+    "website": "https://elevenlabs.io",
+    "description": "Advanced speech recognition with multilingual support",
+    "requires_api_key": true,
+    "api_key_type": "string",
+    "api_key_description": "ElevenLabs API Key"
+  },
+  "models": [
+    {
+      "id": "eleven_multilingual_v2",
+      "name": "Eleven Multilingual v2",
+      "description": "Latest multilingual speech recognition model",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-PT", "pl-PL"]
+    },
+    {
+      "id": "eleven_multilingual_v1",
+      "name": "Eleven Multilingual v1",
+      "description": "Previous generation multilingual model",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT"]
+    },
+    {
+      "id": "eleven_english_v1",
+      "name": "Eleven English v1",
+      "description": "English-optimized speech recognition",
+      "supported_languages": ["en-US", "en-GB"]
+    }
+  ],
+  "languages": {
+    "en-US": {"name": "English (US)", "flag": "🇺🇸", "region": "North America"},
+    "en-GB": {"name": "English (UK)", "flag": "🇬🇧", "region": "Europe"},
+    "es-ES": {"name": "Spanish (Spain)", "flag": "🇪🇸", "region": "Europe"},
+    "fr-FR": {"name": "French (France)", "flag": "🇫🇷", "region": "Europe"},
+    "de-DE": {"name": "German (Germany)", "flag": "🇩🇪", "region": "Europe"},
+    "it-IT": {"name": "Italian (Italy)", "flag": "🇮🇹", "region": "Europe"},
+    "pt-PT": {"name": "Portuguese (Portugal)", "flag": "🇵🇹", "region": "Europe"},
+    "pl-PL": {"name": "Polish (Poland)", "flag": "🇵🇱", "region": "Europe"}
+  }
+}

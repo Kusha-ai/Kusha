@@ -1,0 +1,118 @@
+{
+  "provider": {
+    "id": "google",
+    "name": "Google Cloud Speech-to-Text",
+    "description": "Google's cloud-based speech recognition service",
+    "requires_api_key": true,
+    "api_key_type": "json_file"
+  },
+  "models": [
+    {
+      "id": "latest_long",
+      "name": "Latest Long Model",
+      "description": "Latest model optimized for long-form audio",
+      "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "ar-SA"],
+      "features": ["Enhanced accuracy", "Long-form audio", "Automatic punctuation"]
+    },
+    {
+      "id": "latest_short", 
+      "name": "Latest Short Model",
+      "description": "Latest model optimized for short-form audio",
+      "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "ja-JP", "ko-KR", "zh-CN", "ar-SA"],
+      "features": ["Low latency", "Short-form audio", "Real-time"]
+    },
+    {
+      "id": "command_and_search",
+      "name": "Command and Search",
+      "description": "Optimized for voice commands and search queries",
+      "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN"],
+      "features": ["Voice commands", "Search queries", "Low latency"]
+    },
+    {
+      "id": "phone_call",
+      "name": "Phone Call Model",
+      "description": "Optimized for phone call audio quality",
+      "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "ja-JP", "ko-KR"],
+      "features": ["Phone quality", "Noise robust", "Enhanced accuracy"]
+    },
+    {
+      "id": "video",
+      "name": "Video Model", 
+      "description": "Optimized for video content transcription",
+      "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN"],
+      "features": ["Video content", "Multiple speakers", "Enhanced accuracy"]
+    }
+  ],
+  "languages": {
+    "hi-IN": {
+      "name": "Hindi (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "en-IN": {
+      "name": "English (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "en-US": {
+      "name": "English (United States)",
+      "flag": "🇺🇸",
+      "region": "North America"
+    },
+    "en-GB": {
+      "name": "English (United Kingdom)",
+      "flag": "🇬🇧",
+      "region": "Europe"
+    },
+    "es-ES": {
+      "name": "Spanish (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "fr-FR": {
+      "name": "French (France)",
+      "flag": "🇫🇷",
+      "region": "Europe"
+    },
+    "de-DE": {
+      "name": "German (Germany)",
+      "flag": "🇩🇪",
+      "region": "Europe"
+    },
+    "it-IT": {
+      "name": "Italian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "pt-BR": {
+      "name": "Portuguese (Brazil)",
+      "flag": "🇧🇷",
+      "region": "South America"
+    },
+    "ru-RU": {
+      "name": "Russian (Russia)",
+      "flag": "🇷🇺",
+      "region": "Europe"
+    },
+    "ja-JP": {
+      "name": "Japanese (Japan)",
+      "flag": "🇯🇵",
+      "region": "Asia"
+    },
+    "ko-KR": {
+      "name": "Korean (South Korea)",
+      "flag": "🇰🇷",
+      "region": "Asia"
+    },
+    "zh-CN": {
+      "name": "Chinese (Simplified)",
+      "flag": "🇨🇳",
+      "region": "Asia"
+    },
+    "ar-SA": {
+      "name": "Arabic (Saudi Arabia)",
+      "flag": "🇸🇦",
+      "region": "Middle East"
+    }
+  }
+}

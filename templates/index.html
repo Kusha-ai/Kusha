@@ -1,0 +1,516 @@
+{% extends "base.html" %}
+
+{% block title %}ASR Speed Test - User Interface{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1><i class="fas fa-microphone"></i> ASR Speed Test</h1>
+        <p class="lead">Test and compare speech recognition providers for speed and accuracy</p>
+        
+        <!-- Provider Selection -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-cog"></i> Provider Configuration</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="provider" class="form-label">Provider</label>
+                        <select id="provider" class="form-select">
+                            <option value="">Select Provider</option>
+                            {% for key, name in providers.items() %}
+                                <option value="{{ key }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="model" class="form-label">Model</label>
+                        <select id="model" class="form-select">
+                            <option value="">Select Model</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="language" class="form-label">Language</label>
+                        <select id="language" class="form-select">
+                            <option value="en-US">English (US)</option>
+                            <option value="en-GB">English (UK)</option>
+                            <option value="hi">Hindi</option>
+                            <option value="bn">Bengali</option>
+                            <option value="ta">Tamil</option>
+                            <option value="te">Telugu</option>
+                            <option value="mr">Marathi</option>
+                            <option value="gu">Gujarati</option>
+                            <option value="kn">Kannada</option>
+                            <option value="ml">Malayalam</option>
+                            <option value="pa">Punjabi</option>
+                            <option value="or">Odia</option>
+                            <option value="as">Assamese</option>
+                            <option value="ur">Urdu</option>
+                            <option value="ne">Nepali</option>
+                            <option value="sa">Sanskrit</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Input -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-microphone"></i> Audio Input</h5>
+            </div>
+            <div class="card-body">
+                <div id="recordingSupport" class="alert alert-info mb-3" style="display: none;">
+                    <i class="fas fa-info-circle"></i> <strong>Note:</strong> <span id="supportMessage"></span>
+                </div>
+                
+                <div class="audio-controls">
+                    <button id="recordBtn" class="btn btn-danger me-2">
+                        <i class="fas fa-microphone"></i> Start Recording
+                    </button>
+                    <button id="stopBtn" class="btn btn-secondary me-2" disabled>
+                        <i class="fas fa-stop"></i> Stop Recording
+                    </button>
+                    <span class="recording-indicator">
+                        <i class="fas fa-circle"></i> Recording...
+                    </span>
+                </div>
+                
+                <div class="mb-3 mt-3">
+                    <label for="audioFile" class="form-label">
+                        <i class="fas fa-upload"></i> Or upload audio file
+                    </label>
+                    <input type="file" id="audioFile" class="form-control" accept=".wav,.mp3,.m4a,.flac,.webm">
+                    <div class="form-text">Supported formats: WAV, MP3, M4A, FLAC, WebM</div>
+                </div>
+                
+                <audio id="audioPlayer" controls class="w-100" style="display: none;"></audio>
+            </div>
+        </div>
+
+        <!-- Testing Controls -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-play"></i> Testing</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-2 mb-3">
+                    <button id="testBtn" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Run Speed Test
+                    </button>
+                    <button id="testAllBtn" class="btn btn-info">
+                        <i class="fas fa-rocket"></i> Test All Providers
+                    </button>
+                    <button id="clearBtn" class="btn btn-warning">
+                        <i class="fas fa-trash"></i> Clear Results
+                    </button>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress" style="display: none;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 100%"></div>
+                    </div>
+                    <div class="loading-spinner text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-2">Processing audio...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Recent Results -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Recent Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="recentResults" class="test-results">
+                    <div class="text-muted text-center">No results yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Modal -->
+<div class="modal fade" id="resultsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Test Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalResults"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let currentAudioBlob = null;
+
+$(document).ready(function() {
+    // Check browser compatibility for recording
+    checkRecordingSupport();
+    
+    // Load models when provider changes
+    $('#provider').change(function() {
+        const provider = $(this).val();
+        if (provider) {
+            loadModels(provider);
+        } else {
+            $('#model').html('<option value="">Select Model</option>');
+        }
+    });
+
+    // Recording functionality
+    $('#recordBtn').click(startRecording);
+    $('#stopBtn').click(stopRecording);
+    
+    // File upload
+    $('#audioFile').change(handleFileUpload);
+    
+    // Testing
+    $('#testBtn').click(runSpeedTest);
+    $('#testAllBtn').click(testAllProviders);
+    $('#clearBtn').click(clearResults);
+    
+    // Load recent results
+    loadRecentResults();
+});
+
+function checkRecordingSupport() {
+    let supportMessage = '';
+    let isSupported = true;
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        supportMessage = 'Audio recording is not supported in this browser or requires HTTPS.';
+        isSupported = false;
+    } else if (!window.MediaRecorder) {
+        supportMessage = 'MediaRecorder is not supported in this browser.';
+        isSupported = false;
+    } else if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        supportMessage = 'Audio recording requires HTTPS when not on localhost.';
+        isSupported = false;
+    } else {
+        supportMessage = 'Audio recording is supported. Click "Start Recording" to begin.';
+    }
+    
+    if (!isSupported) {
+        supportMessage += ' Please upload an audio file instead.';
+        $('#recordBtn').prop('disabled', true);
+        $('#recordingSupport').removeClass('alert-info').addClass('alert-warning');
+    } else {
+        $('#recordingSupport').removeClass('alert-warning').addClass('alert-info');
+    }
+    
+    $('#supportMessage').text(supportMessage);
+    $('#recordingSupport').show();
+}
+
+function loadModels(provider) {
+    $.get(`/api/models/${provider}`)
+        .done(function(data) {
+            const modelSelect = $('#model');
+            modelSelect.html('<option value="">Select Model</option>');
+            
+            data.models.forEach(function(model) {
+                modelSelect.append(`<option value="${model.id}">${model.name}</option>`);
+            });
+        })
+        .fail(function() {
+            showAlert('Error loading models', 'danger');
+        });
+}
+
+async function startRecording() {
+    try {
+        // Check if getUserMedia is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Browser does not support audio recording. Please use HTTPS or localhost, or upload an audio file instead.');
+        }
+        
+        // Check if MediaRecorder is supported
+        if (!window.MediaRecorder) {
+            throw new Error('MediaRecorder is not supported in this browser. Please upload an audio file instead.');
+        }
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                sampleRate: 16000
+            }
+        });
+        
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = function(event) {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
+        
+        mediaRecorder.onstop = function() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            currentAudioBlob = audioBlob;
+            
+            const audioUrl = URL.createObjectURL(audioBlob);
+            $('#audioPlayer').attr('src', audioUrl).show();
+            
+            // Stop all tracks to release microphone
+            stream.getTracks().forEach(track => track.stop());
+            
+            showAlert('Recording completed successfully!', 'success');
+        };
+        
+        mediaRecorder.onerror = function(event) {
+            console.error('MediaRecorder error:', event.error);
+            showAlert('Recording error: ' + event.error.message, 'danger');
+            stopRecording();
+        };
+        
+        mediaRecorder.start(1000); // Collect data every second
+        
+        $('#recordBtn').prop('disabled', true);
+        $('#stopBtn').prop('disabled', false);
+        $('.recording-indicator').show();
+        
+        showAlert('Recording started. Click "Stop Recording" when finished.', 'info');
+        
+    } catch (error) {
+        console.error('Recording error:', error);
+        
+        let errorMessage = 'Error accessing microphone: ' + error.message;
+        
+        if (error.name === 'NotAllowedError') {
+            errorMessage = 'Microphone permission denied. Please allow microphone access and try again, or upload an audio file instead.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage = 'No microphone found. Please check your audio devices or upload an audio file instead.';
+        } else if (error.name === 'NotSupportedError') {
+            errorMessage = 'Audio recording not supported in this browser. Please upload an audio file instead.';
+        } else if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+            errorMessage = 'Audio recording requires HTTPS. Please use HTTPS or upload an audio file instead.';
+        }
+        
+        showAlert(errorMessage, 'warning');
+        
+        // Reset button states
+        $('#recordBtn').prop('disabled', false);
+        $('#stopBtn').prop('disabled', true);
+        $('.recording-indicator').hide();
+    }
+}
+
+function stopRecording() {
+    try {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
+    } catch (error) {
+        console.error('Error stopping recording:', error);
+        showAlert('Error stopping recording: ' + error.message, 'warning');
+    }
+    
+    // Always reset UI state
+    $('#recordBtn').prop('disabled', false);
+    $('#stopBtn').prop('disabled', true);
+    $('.recording-indicator').hide();
+}
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        currentAudioBlob = file;
+        const audioUrl = URL.createObjectURL(file);
+        $('#audioPlayer').attr('src', audioUrl).show();
+    }
+}
+
+function runSpeedTest() {
+    const provider = $('#provider').val();
+    const model = $('#model').val();
+    const language = $('#language').val();
+    
+    if (!provider || !model || !language) {
+        showAlert('Please select provider, model, and language', 'warning');
+        return;
+    }
+    
+    if (!currentAudioBlob) {
+        showAlert('Please record or upload an audio file', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('provider', provider);
+    formData.append('model_id', model);
+    formData.append('language', language);
+    formData.append('audio', currentAudioBlob, 'audio.wav');
+    
+    showLoading(true);
+    
+    $.ajax({
+        url: '/api/transcribe',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(result) {
+            showLoading(false);
+            displayResult(result);
+            loadRecentResults();
+        },
+        error: function(xhr) {
+            showLoading(false);
+            showAlert('Error: ' + xhr.responseJSON.detail, 'danger');
+        }
+    });
+}
+
+function testAllProviders() {
+    const language = $('#language').val();
+    
+    if (!language) {
+        showAlert('Please select a language', 'warning');
+        return;
+    }
+    
+    if (!currentAudioBlob) {
+        showAlert('Please record or upload an audio file', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('language', language);
+    formData.append('audio', currentAudioBlob, 'audio.wav');
+    
+    showLoading(true);
+    
+    $.ajax({
+        url: '/api/test-all-providers',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(data) {
+            showLoading(false);
+            displayAllResults(data.results);
+            loadRecentResults();
+        },
+        error: function(xhr) {
+            showLoading(false);
+            showAlert('Error: ' + xhr.responseJSON.detail, 'danger');
+        }
+    });
+}
+
+function displayResult(result) {
+    const resultHtml = `
+        <div class="alert ${result.success ? 'result-success' : 'result-error'}">
+            <h6><strong>${result.provider}</strong> - ${result.model_id}</h6>
+            <p><strong>Processing Time:</strong> ${result.processing_time.toFixed(3)}s</p>
+            <p><strong>Transcription:</strong> ${result.transcription || 'No transcription'}</p>
+            ${result.confidence ? `<p><strong>Confidence:</strong> ${(result.confidence * 100).toFixed(1)}%</p>` : ''}
+            ${result.error ? `<p class="text-danger"><strong>Error:</strong> ${result.error}</p>` : ''}
+        </div>
+    `;
+    
+    $('#modalResults').html(resultHtml);
+    $('#resultsModal').modal('show');
+}
+
+function displayAllResults(results) {
+    let resultHtml = '<h6>Batch Test Results</h6>';
+    
+    results.forEach(function(result) {
+        resultHtml += `
+            <div class="alert ${result.success ? 'result-success' : 'result-error'} mb-2">
+                <h6><strong>${result.provider}</strong></h6>
+                <p><strong>Processing Time:</strong> ${result.processing_time.toFixed(3)}s</p>
+                <p><strong>Transcription:</strong> ${result.transcription || 'No transcription'}</p>
+                ${result.error ? `<p class="text-danger"><strong>Error:</strong> ${result.error}</p>` : ''}
+            </div>
+        `;
+    });
+    
+    $('#modalResults').html(resultHtml);
+    $('#resultsModal').modal('show');
+}
+
+function loadRecentResults() {
+    $.get('/api/test-results')
+        .done(function(data) {
+            const resultsDiv = $('#recentResults');
+            
+            if (data.results.length === 0) {
+                resultsDiv.html('<div class="text-muted text-center">No results yet</div>');
+                return;
+            }
+            
+            let html = '';
+            data.results.slice(0, 10).forEach(function(result) {
+                html += `
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            <div class="small">
+                                <strong>${result.provider}</strong><br>
+                                ${result.processing_time.toFixed(3)}s<br>
+                                <span class="text-muted">${result.created_at}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.html(html);
+        });
+}
+
+function clearResults() {
+    $('#recentResults').html('<div class="text-muted text-center">No results yet</div>');
+}
+
+function showLoading(show) {
+    if (show) {
+        $('.progress').show();
+        $('.loading-spinner').show();
+        $('#testBtn, #testAllBtn').prop('disabled', true);
+    } else {
+        $('.progress').hide();
+        $('.loading-spinner').hide();
+        $('#testBtn, #testAllBtn').prop('disabled', false);
+    }
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('.container').prepend(alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+        $('.alert').alert('close');
+    }, 5000);
+}
+</script>
+{% endblock %}
