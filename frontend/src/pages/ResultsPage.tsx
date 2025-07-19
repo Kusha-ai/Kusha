@@ -633,96 +633,150 @@ const ResultsPage: React.FC = () => {
                           }
                         }}
                       >
-                        <CardContent>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <Typography variant="h4" component="span">
-                              {getMedalEmoji(index)}
-                            </Typography>
-                            {getProviderIcon(provider.provider) ? (
-                              <Box
-                                component="img"
-                                src={getProviderIcon(provider.provider)}
-                                alt={provider.provider}
+                        {/* Rank Badge */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: -15,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            zIndex: 10,
+                            backgroundColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32',
+                            color: 'white',
+                            borderRadius: '20px',
+                            padding: '8px 16px',
+                            fontWeight: 'bold',
+                            fontSize: '0.875rem',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                          }}
+                        >
+                          #{index + 1} {getMedalEmoji(index)}
+                        </Box>
+                        
+                        <CardContent sx={{ pt: 4, pb: 3 }}>
+                          {/* Provider Header */}
+                          <Box sx={{ textAlign: 'center', mb: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                              {getProviderIcon(provider.provider) ? (
+                                <Box
+                                  component="img"
+                                  src={getProviderIcon(provider.provider)}
+                                  alt={provider.provider}
+                                  sx={{ 
+                                    width: 48, 
+                                    height: 48,
+                                    borderRadius: '12px',
+                                    objectFit: 'contain',
+                                    backgroundColor: 'background.paper',
+                                    p: 1,
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                  }}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLElement
+                                    target.style.display = 'none'
+                                    const avatar = target.parentElement?.querySelector('.fallback-avatar') as HTMLElement
+                                    if (avatar) avatar.style.display = 'flex'
+                                  }}
+                                />
+                              ) : null}
+                              <Avatar
+                                className="fallback-avatar"
                                 sx={{ 
-                                  width: 32, 
-                                  height: 32,
-                                  borderRadius: '50%',
-                                  objectFit: 'contain',
-                                  backgroundColor: 'background.paper',
-                                  p: 0.5
+                                  bgcolor: provider.color, 
+                                  width: 48, 
+                                  height: 48,
+                                  fontSize: '1.25rem',
+                                  fontWeight: 'bold',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                  display: getProviderIcon(provider.provider) ? 'none' : 'flex'
                                 }}
-                                onError={(e) => {
-                                  // Fallback to avatar with first character if icon fails to load
-                                  const target = e.target as HTMLElement
-                                  target.style.display = 'none'
-                                  const avatar = target.parentElement?.querySelector('.fallback-avatar') as HTMLElement
-                                  if (avatar) avatar.style.display = 'flex'
-                                }}
-                              />
-                            ) : null}
-                            <Avatar
-                              className="fallback-avatar"
-                              sx={{ 
-                                bgcolor: provider.color, 
-                                width: 32, 
-                                height: 32,
-                                fontSize: '0.875rem',
-                                display: getProviderIcon(provider.provider) ? 'none' : 'flex'
-                              }}
-                            >
-                              {provider.provider.charAt(0)}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" fontWeight="600" noWrap>
-                                {provider.provider}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {provider.totalTests} tests
-                              </Typography>
+                              >
+                                {provider.provider.charAt(0)}
+                              </Avatar>
                             </Box>
-                          </Box>
-                          
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">
-                                Avg Time
-                              </Typography>
-                              <Typography variant="h6" color="primary" fontWeight="600">
-                                {provider.avgTime.toFixed(2)}s
-                              </Typography>
-                            </Box>
-                            <Box sx={{ textAlign: 'right' }}>
-                              <Typography variant="body2" color="text.secondary">
-                                Percentile
-                              </Typography>
-                              <Typography variant="body1" fontWeight="600">
-                                {provider.percentile}th
-                              </Typography>
-                            </Box>
-                          </Box>
-                          
-                          <Box sx={{ mt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="h6" fontWeight="700" sx={{ mb: 1 }}>
+                              {provider.provider}
+                            </Typography>
                             <Chip
                               size="small"
-                              label={`⚡ ${provider.fastestTime.toFixed(2)}s`}
-                              color="success"
+                              label={`${provider.totalTests} tests`}
                               variant="outlined"
+                              sx={{ 
+                                fontWeight: 500,
+                                borderColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'
+                              }}
                             />
-                            <Typography variant="caption" color="text.secondary">
-                              Best Time
-                            </Typography>
                           </Box>
                           
-                          {/* Speed comparison line */}
-                          <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                          {/* Performance Metrics */}
+                          <Box sx={{ mb: 3 }}>
+                            <Grid container spacing={2}>
+                              <Grid item xs={6}>
+                                <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: 2 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    Average Time
+                                  </Typography>
+                                  <Typography variant="h5" fontWeight="700" color="primary.main">
+                                    {provider.avgTime.toFixed(2)}s
+                                  </Typography>
+                                </Box>
+                              </Grid>
+                              <Grid item xs={6}>
+                                <Box sx={{ textAlign: 'center', p: 2, backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: 2 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    Percentile
+                                  </Typography>
+                                  <Typography variant="h5" fontWeight="700" color="secondary.main">
+                                    {provider.percentile}th
+                                  </Typography>
+                                </Box>
+                              </Grid>
+                            </Grid>
+                          </Box>
+                          
+                          {/* Best Time Chip */}
+                          <Box sx={{ textAlign: 'center', mb: 3 }}>
+                            <Chip
+                              label={`⚡ Best: ${provider.fastestTime.toFixed(2)}s`}
+                              color="success"
+                              variant="filled"
+                              sx={{ 
+                                fontWeight: 600,
+                                fontSize: '0.875rem',
+                                px: 2,
+                                py: 1
+                              }}
+                            />
+                          </Box>
+                          
+                          {/* Speed Comparison */}
+                          <Box 
+                            sx={{ 
+                              textAlign: 'center',
+                              pt: 2,
+                              borderTop: '2px solid',
+                              borderColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32',
+                              borderStyle: 'dashed'
+                            }}
+                          >
                             {index === 0 ? (
-                              <Typography variant="caption" color="success.main" fontWeight="600" textAlign="center" display="block">
-                                🏆 Fastest Provider
-                              </Typography>
+                              <Box>
+                                <Typography variant="body1" fontWeight="700" sx={{ color: '#FFD700', mb: 0.5 }}>
+                                  👑 Champion
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Fastest Provider
+                                </Typography>
+                              </Box>
                             ) : (
-                              <Typography variant="caption" color="text.secondary" textAlign="center" display="block">
-                                {((provider.avgTime - leaderboard[0].avgTime) / leaderboard[0].avgTime * 100).toFixed(0)}% slower than #1
-                              </Typography>
+                              <Box>
+                                <Typography variant="body1" fontWeight="600" color="text.primary" sx={{ mb: 0.5 }}>
+                                  {((provider.avgTime - leaderboard[0].avgTime) / leaderboard[0].avgTime * 100).toFixed(0)}% slower
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  than champion
+                                </Typography>
+                              </Box>
                             )}
                           </Box>
                         </CardContent>
