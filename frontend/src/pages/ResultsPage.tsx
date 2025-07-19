@@ -563,29 +563,74 @@ const ResultsPage: React.FC = () => {
             </Alert>
           )}
 
-          {/* Leaderboard Section */}
+          {/* Enhanced Leaderboard Section */}
           {!loading && leaderboard.length > 0 && (
-            <Card sx={{ mb: 3, borderRadius: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  🏆 Provider Leaderboard - Fastest Response Times
+            <Card 
+              sx={{ 
+                mb: 4, 
+                borderRadius: 4,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ textAlign: 'center', mb: 4 }}>
+                  <Typography 
+                    variant="h4" 
+                    gutterBottom 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      gap: 2,
+                      fontWeight: 700,
+                      background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    🏆 Speed Champions
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                    Top 3 Fastest ASR Providers
+                  </Typography>
                   <Chip 
-                    size="small" 
-                    label={`${filteredResults.length} tests`}
+                    size="medium" 
+                    label={`Based on ${filteredResults.length} test results`}
                     variant="outlined"
+                    sx={{ 
+                      fontWeight: 600,
+                      borderColor: 'primary.main',
+                      color: 'primary.main'
+                    }}
                   />
-                </Typography>
+                </Box>
                 
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
                   {leaderboard.slice(0, 3).map((provider, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={provider.provider}>
+                    <Grid item xs={12} md={4} key={provider.provider}>
                       <Card 
+                        elevation={index === 0 ? 12 : 6}
                         sx={{ 
                           position: 'relative',
-                          borderRadius: 2,
-                          border: index < 3 ? '2px solid' : '1px solid',
-                          borderColor: index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : 'divider',
-                          background: index < 3 ? 'linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,255,255,0.05) 100%)' : 'background.paper'
+                          borderRadius: 3,
+                          overflow: 'visible',
+                          transform: index === 0 ? 'scale(1.05)' : 'scale(1)',
+                          transition: 'all 0.3s ease',
+                          border: '2px solid',
+                          borderColor: index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32',
+                          background: index === 0 
+                            ? 'linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,223,0,0.05) 100%)' 
+                            : index === 1 
+                            ? 'linear-gradient(135deg, rgba(192,192,192,0.15) 0%, rgba(220,220,220,0.05) 100%)'
+                            : 'linear-gradient(135deg, rgba(205,127,50,0.15) 0%, rgba(210,150,75,0.05) 100%)',
+                          '&:hover': {
+                            transform: index === 0 ? 'scale(1.08)' : 'scale(1.03)',
+                            boxShadow: index === 0 ? '0 25px 50px rgba(255,215,0,0.3)' : '0 15px 30px rgba(0,0,0,0.2)'
+                          }
                         }}
                       >
                         <CardContent>
