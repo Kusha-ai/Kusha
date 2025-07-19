@@ -3,8 +3,8 @@ import time
 import requests
 from typing import Dict, List, Optional, Any
 
-class FireworksASR:
-    """Fireworks AI ASR provider using Whisper models"""
+class GroqASR:
+    """Groq ASR provider using Whisper models"""
     
     def __init__(self, config: Dict, api_key: str = None):
         self.config = config
@@ -25,12 +25,12 @@ class FireworksASR:
         return models
     
     def is_service_available(self) -> bool:
-        """Check if Fireworks AI service is available"""
+        """Check if Groq service is available"""
         return bool(self.api_key)
     
     def transcribe_audio(self, audio_file_path: str, model_id: str, language_code: str) -> Dict[str, Any]:
         """
-        Transcribe audio using Fireworks AI Whisper models
+        Transcribe audio using Groq Whisper models
         
         Args:
             audio_file_path: Path to audio file
@@ -58,13 +58,12 @@ class FireworksASR:
                 'Authorization': f'Bearer {self.api_key}'
             }
             
-            # For Fireworks API, map our model IDs to what the API actually expects
-            # The API expects "whisper-v3" for the turbo model, not "whisper-v3-turbo"
+            # Groq uses OpenAI-compatible API format
             model_mapping = {
-                'whisper-v3-turbo': 'whisper-v3'  # Map our display name to API name
+                'whisper-large-v3': 'whisper-large-v3'
             }
             
-            fireworks_model = model_mapping.get(model_id, model_id)
+            groq_model = model_mapping.get(model_id, model_id)
             
             # Prepare files and data for multipart form
             files = {
@@ -72,11 +71,12 @@ class FireworksASR:
             }
             
             data = {
-                'model': fireworks_model,
-                'language': language_code.split('-')[0]  # Convert 'en-US' to 'en'
+                'model': groq_model,
+                'language': language_code.split('-')[0],  # Convert 'en-US' to 'en'
+                'response_format': 'json'
             }
             
-            # Make request to Fireworks AI
+            # Make request to Groq API
             response = requests.post(
                 f"{self.base_url}/audio/transcriptions",
                 headers=headers,
@@ -99,7 +99,7 @@ class FireworksASR:
                     'model_id': model_id,
                     'language_code': language_code,
                     'transcription': result.get('text', ''),
-                    'confidence': 0.85,  # Fireworks doesn't provide confidence, use default
+                    'confidence': 0.90,  # Groq doesn't provide confidence, use high default
                     'processing_time': processing_time,
                     'raw_response': result
                 }
@@ -125,7 +125,7 @@ class FireworksASR:
             }
     
     def test_connection(self) -> Dict[str, Any]:
-        """Test connection to Fireworks AI service"""
+        """Test connection to Groq service"""
         if not self.api_key:
             return {
                 'success': False,

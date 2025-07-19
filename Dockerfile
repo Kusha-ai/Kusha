@@ -44,8 +44,8 @@ COPY welcome.wav ./
 # Copy built frontend from previous stage
 COPY --from=frontend-builder /app/frontend/dist/ ./static/dist/
 
-# Create directories for logs and data
-RUN mkdir -p logs data static
+# Create directories for logs, data, and database
+RUN mkdir -p logs data static database
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app

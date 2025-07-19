@@ -38,6 +38,8 @@ import {
   Security,
   Warning,
   Mic,
+  Close,
+  Visibility,
 } from '@mui/icons-material'
 
 interface ApiKeyData {
@@ -173,6 +175,11 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
           error: data.success ? undefined : data.error
         }
       }))
+      
+      // Refresh API keys to update activation status
+      if (data.success && data.provider_activated) {
+        fetchApiKeys()
+      }
     } catch (err) {
       setTestResults(prev => ({
         ...prev,
@@ -213,6 +220,11 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
           } : undefined
         }
       }))
+      
+      // Refresh API keys to update activation status
+      if (data.success) {
+        fetchApiKeys()
+      }
     } catch (err) {
       setTestResults(prev => ({
         ...prev,
@@ -221,6 +233,55 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
           error: err instanceof Error ? err.message : 'Transcription test failed'
         }
       }))
+    }
+  }
+
+  const handleActivateAll = async () => {
+    setLoading(true)
+    setError('')
+    
+    try {
+      const response = await fetch('/api/admin/activate-all-providers', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setError(`✅ ${data.message}`)
+        fetchApiKeys() // Refresh to show updated activation status
+      } else {
+        setError(data.error || 'Failed to activate providers')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to activate providers')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeactivateProvider = async (providerId: string) => {
+    if (!confirm('Are you sure you want to deactivate this provider? It will no longer be available for testing.')) return
+    
+    try {
+      const response = await fetch(`/api/admin/api-keys/${providerId}/deactivate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setError(`✅ ${data.message}`)
+        fetchApiKeys() // Refresh to show updated activation status
+      } else {
+        setError(data.error || 'Failed to deactivate provider')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to deactivate provider')
     }
   }
 
@@ -259,21 +320,54 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        mb: 3,
+        p: 3,
+        borderRadius: 3,
+        background: 'rgba(255, 255, 255, 0.98)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <VpnKey sx={{ fontSize: '2rem', color: 'primary.main' }} />
-          <Typography variant="h5" fontWeight="600">
+          <Typography variant="h5" fontWeight="600" color="primary.main">
             API Key Management
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={fetchApiKeys}
-          disabled={loading}
-        >
-          Refresh
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={fetchApiKeys}
+            disabled={loading}
+            sx={{
+              background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #5a6fd8 30%, #6a4190 90%)',
+              },
+            }}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Check />}
+            onClick={handleActivateAll}
+            disabled={loading}
+            sx={{
+              background: 'linear-gradient(45deg, #43e97b 30%, #38f9d7 90%)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #39d870 30%, #32e6c5 90%)',
+              },
+            }}
+          >
+            Activate All
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -282,7 +376,16 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
         </Alert>
       )}
 
-      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          borderRadius: 3,
+          background: 'rgba(255, 255, 255, 0.98)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        }}
+      >
         <Table>
           <TableHead>
             <TableRow>
@@ -462,6 +565,29 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
                           </Tooltip>
                         )}
                       </>
+                    )}
+                    
+                    {/* Dashboard and Deactivate buttons for all providers */}
+                    <Tooltip title="View Provider Dashboard">
+                      <IconButton
+                        size="small"
+                        onClick={() => window.open(`/admin/provider/${provider.provider_id}`, '_blank')}
+                        color="info"
+                      >
+                        <Visibility />
+                      </IconButton>
+                    </Tooltip>
+                    
+                    {provider.is_activated && (
+                      <Tooltip title="Deactivate Provider">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeactivateProvider(provider.provider_id)}
+                          color="error"
+                        >
+                          <Close />
+                        </IconButton>
+                      </Tooltip>
                     )}
                   </Box>
                   

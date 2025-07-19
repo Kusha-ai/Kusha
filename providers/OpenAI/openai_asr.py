@@ -1,12 +1,10 @@
 import os
 import time
-import json
-import base64
 import requests
 from typing import Dict, List, Optional, Any
 
-class GoogleASR:
-    """Google Cloud Speech-to-Text ASR provider using REST API with API key"""
+class OpenAIASR:
+    """OpenAI ASR provider using Whisper API"""
     
     def __init__(self, config: Dict, api_key: str = None):
         self.config = config
@@ -27,17 +25,17 @@ class GoogleASR:
         return models
     
     def is_service_available(self) -> bool:
-        """Check if Google Cloud Speech service is available"""
+        """Check if OpenAI service is available"""
         return bool(self.api_key)
     
     def transcribe_audio(self, audio_file_path: str, model_id: str, language_code: str) -> Dict[str, Any]:
         """
-        Transcribe audio using Google Cloud Speech-to-Text REST API
+        Transcribe audio using OpenAI Whisper API
         
         Args:
             audio_file_path: Path to audio file
             model_id: Model ID to use
-            language_code: Language code (e.g., 'hi-IN')
+            language_code: Language code (e.g., 'en-US')
             
         Returns:
             Dictionary with transcription results
@@ -55,89 +53,70 @@ class GoogleASR:
             }
         
         try:
-            # Read and encode audio file
-            with open(audio_file_path, 'rb') as audio_file:
-                audio_content = audio_file.read()
-                audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-            
-            # Determine audio encoding
-            encoding = "WEBM_OPUS"
-            if audio_file_path.lower().endswith('.wav'):
-                encoding = "LINEAR16"
-            elif audio_file_path.lower().endswith('.mp3'):
-                encoding = "MP3"
-            elif audio_file_path.lower().endswith('.flac'):
-                encoding = "FLAC"
-            
-            # Prepare request data
-            request_data = {
-                "config": {
-                    "encoding": encoding,
-                    "sampleRateHertz": 16000,
-                    "languageCode": language_code,
-                    "model": model_id,
-                    "enableAutomaticPunctuation": True,
-                    "enableWordConfidence": True
-                },
-                "audio": {
-                    "content": audio_base64
-                }
-            }
-            
-            # Make request to Google Cloud Speech API
+            # Prepare the request headers
             headers = {
-                'Content-Type': 'application/json',
-                'X-Goog-Api-Key': self.api_key
+                'Authorization': f'Bearer {self.api_key}'
             }
             
+            # OpenAI uses standard Whisper model names
+            model_mapping = {
+                'whisper-1': 'whisper-1'
+            }
+            
+            openai_model = model_mapping.get(model_id, model_id)
+            
+            # Prepare files and data for multipart form
+            files = {
+                'file': open(audio_file_path, 'rb')
+            }
+            
+            data = {
+                'model': openai_model,
+                'language': language_code.split('-')[0],  # Convert 'en-US' to 'en'
+                'response_format': 'verbose_json'  # Get detailed response with timestamps
+            }
+            
+            # Make request to OpenAI API
             response = requests.post(
-                f"{self.base_url}/speech:recognize",
+                f"{self.base_url}/audio/transcriptions",
                 headers=headers,
-                json=request_data,
-                timeout=120
+                files=files,
+                data=data,
+                timeout=120  # OpenAI can be slower for longer files
             )
+            
+            # Make sure to close the file
+            files['file'].close()
             
             processing_time = time.time() - start_time
             
             if response.status_code == 200:
                 result = response.json()
                 
-                # Process results
-                if 'results' in result and result['results']:
-                    # Get the best alternative
-                    first_result = result['results'][0]
-                    if 'alternatives' in first_result and first_result['alternatives']:
-                        alternative = first_result['alternatives'][0]
-                        
-                        # Calculate average word confidence
-                        word_confidences = []
-                        if 'words' in alternative:
-                            for word in alternative['words']:
-                                if 'confidence' in word:
-                                    word_confidences.append(word['confidence'])
-                        
-                        avg_confidence = alternative.get('confidence', 0.85)
-                        if word_confidences:
-                            avg_confidence = sum(word_confidences) / len(word_confidences)
-                        
-                        return {
-                            'success': True,
-                            'provider': self.provider_name,
-                            'model_id': model_id,
-                            'language_code': language_code,
-                            'transcription': alternative.get('transcript', ''),
-                            'confidence': avg_confidence,
-                            'processing_time': processing_time,
-                            'raw_response': result
-                        }
+                # Extract confidence from segments if available
+                confidence = 0.85  # Default confidence
+                if 'segments' in result and result['segments']:
+                    # Calculate average confidence from segments
+                    segment_confidences = []
+                    for segment in result['segments']:
+                        if 'avg_logprob' in segment:
+                            # Convert log probability to confidence (approximate)
+                            conf = min(max((segment['avg_logprob'] + 1) / 1, 0), 1)
+                            segment_confidences.append(conf)
+                    if segment_confidences:
+                        confidence = sum(segment_confidences) / len(segment_confidences)
                 
                 return {
-                    'success': False,
+                    'success': True,
                     'provider': self.provider_name,
                     'model_id': model_id,
                     'language_code': language_code,
-                    'error': 'No transcription results returned',
-                    'processing_time': processing_time
+                    'transcription': result.get('text', ''),
+                    'confidence': confidence,
+                    'processing_time': processing_time,
+                    'raw_response': result,
+                    'language_detected': result.get('language'),
+                    'duration': result.get('duration')
                 }
             else:
                 error_detail = "Unknown error"
@@ -169,7 +148,7 @@ class GoogleASR:
             }
     
     def test_connection(self) -> Dict[str, Any]:
-        """Test connection to Google Cloud Speech service"""
+        """Test connection to OpenAI service"""
         if not self.api_key:
             return {
                 'success': False,
@@ -177,33 +156,19 @@ class GoogleASR:
             }
         
         try:
-            # Test with a simple API call - try to get operation info (lightweight)
             headers = {
-                'Content-Type': 'application/json',
-                'X-Goog-Api-Key': self.api_key
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json'
             }
             
-            # Test with minimal recognition request to validate API key
-            test_data = {
-                "config": {
-                    "encoding": "LINEAR16",
-                    "sampleRateHertz": 16000,
-                    "languageCode": "en-US"
-                },
-                "audio": {
-                    "content": base64.b64encode(b'\x00' * 1000).decode('utf-8')  # Empty audio for testing
-                }
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/speech:recognize",
+            # Test with a simple API call to list models
+            response = requests.get(
+                f"{self.base_url}/models",
                 headers=headers,
-                json=test_data,
                 timeout=10
             )
             
-            # Even if recognition fails, a 200 or valid error response indicates API key works
-            if response.status_code == 200 or response.status_code == 400:
+            if response.status_code == 200:
                 models = self.get_available_models()
                 languages = self.get_supported_languages()
                 return {
@@ -212,15 +177,18 @@ class GoogleASR:
                     'models_count': len(models),
                     'languages_count': len(languages)
                 }
-            elif response.status_code == 403:
-                return {
-                    'success': False,
-                    'message': "Invalid API key or insufficient permissions"
-                }
             else:
+                error_detail = "Unknown error"
+                try:
+                    error_response = response.json()
+                    if 'error' in error_response:
+                        error_detail = error_response['error'].get('message', str(error_response['error']))
+                except:
+                    error_detail = response.text
+                
                 return {
                     'success': False,
-                    'message': f"API responded with status {response.status_code}"
+                    'message': f"API responded with status {response.status_code}: {error_detail}"
                 }
         except Exception as e:
             return {

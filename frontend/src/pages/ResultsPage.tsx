@@ -35,6 +35,8 @@ import {
   Error,
   Speed,
   Visibility,
+  ArrowUpward,
+  ArrowDownward,
 } from '@mui/icons-material'
 import { formatProcessingTime } from '../utils/timeFormat'
 
@@ -78,8 +80,21 @@ const ResultsPage: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState<string>('')
   const [selectedLanguage, setSelectedLanguage] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [startDate, setStartDate] = useState(() => {
+    // Default to last 7 days
+    const date = new Date()
+    date.setDate(date.getDate() - 7)
+    return date.toISOString().split('T')[0]
+  })
+  const [endDate, setEndDate] = useState(() => {
+    // Default to today
+    return new Date().toISOString().split('T')[0]
+  })
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(25)
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [quickSort, setQuickSort] = useState('newest')
 
   const fetchResults = async () => {
     setLoading(true)
@@ -130,31 +145,7 @@ const ResultsPage: React.FC = () => {
     fetchLanguages()
   }, [])
 
-  const filteredResults = results.filter(result => {
-    const matchesProvider = !selectedProvider || result.provider === selectedProvider
-    const matchesLanguage = !selectedLanguage || result.language_code === selectedLanguage
-    const matchesSearch = !searchTerm || 
-      result.transcription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      result.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      result.model_id.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    return matchesProvider && matchesLanguage && matchesSearch
-  })
-
-  const paginatedResults = filteredResults.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  )
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
-
+  // Helper functions (moved before they're used)
   const getProviderColor = (provider: string) => {
     return PROVIDER_COLORS[provider.toLowerCase()] || '#9e9e9e'
   }
@@ -172,6 +163,148 @@ const ResultsPage: React.FC = () => {
   const getProviderName = (providerId: string) => {
     const provider = providers.find(p => p.id === providerId)
     return provider?.name || providerId
+  }
+
+  const filteredResults = results.filter(result => {
+    // Fix provider filter: match selectedProvider (ID) with provider name from results
+    const selectedProviderName = selectedProvider 
+      ? providers.find(p => p.id === selectedProvider)?.name || selectedProvider
+      : null
+    const matchesProvider = !selectedProvider || result.provider === selectedProviderName
+    
+    const matchesLanguage = !selectedLanguage || result.language_code === selectedLanguage
+    const matchesSearch = !searchTerm || 
+      result.transcription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      result.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      result.model_id.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // Date filtering
+    const resultDate = new Date(result.created_at)
+    const matchesStartDate = !startDate || resultDate >= new Date(startDate)
+    const matchesEndDate = !endDate || resultDate <= new Date(endDate + 'T23:59:59')
+    
+    return matchesProvider && matchesLanguage && matchesSearch && matchesStartDate && matchesEndDate
+  })
+
+  // Sort filtered results
+  const sortedResults = [...filteredResults].sort((a, b) => {
+    let aValue = a[sortBy as keyof TestResult]
+    let bValue = b[sortBy as keyof TestResult]
+    
+    // Handle different data types
+    if (sortBy === 'created_at') {
+      aValue = new Date(a.created_at).getTime()
+      bValue = new Date(b.created_at).getTime()
+    } else if (typeof aValue === 'string') {
+      aValue = aValue.toLowerCase()
+      bValue = (bValue as string).toLowerCase()
+    }
+    
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const paginatedResults = sortedResults.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  )
+
+  // Calculate leaderboard data
+  const leaderboard = React.useMemo(() => {
+    const providerStats = new Map()
+    
+    filteredResults.forEach(result => {
+      const provider = result.provider
+      if (!providerStats.has(provider)) {
+        providerStats.set(provider, {
+          provider,
+          totalTests: 0,
+          totalTime: 0,
+          totalConfidence: 0,
+          fastestTime: Infinity,
+          color: getProviderColor(provider)
+        })
+      }
+      
+      const stats = providerStats.get(provider)
+      stats.totalTests++
+      stats.totalTime += result.processing_time
+      stats.totalConfidence += result.accuracy_score
+      stats.fastestTime = Math.min(stats.fastestTime, result.processing_time)
+    })
+    
+    // Calculate averages and create leaderboard array
+    const leaderboardArray = Array.from(providerStats.values()).map(stats => ({
+      ...stats,
+      avgTime: stats.totalTime / stats.totalTests,
+      avgConfidence: (stats.totalConfidence / stats.totalTests) * 100,
+      score: (stats.totalConfidence / stats.totalTests) * 100 / (stats.totalTime / stats.totalTests) // Confidence/Time ratio
+    }))
+    
+    // Sort by average processing time (fastest first)
+    return leaderboardArray.sort((a, b) => a.avgTime - b.avgTime)
+  }, [filteredResults])
+
+  const getMedalEmoji = (rank: number) => {
+    switch (rank) {
+      case 0: return '🥇'
+      case 1: return '🥈' 
+      case 2: return '🥉'
+      default: return `#${rank + 1}`
+    }
+  }
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('desc')
+    }
+    setPage(0)
+  }
+
+  const handleQuickSort = (sortType: string) => {
+    setQuickSort(sortType)
+    switch (sortType) {
+      case 'fastest':
+        setSortBy('processing_time')
+        setSortOrder('asc')
+        break
+      case 'slowest':
+        setSortBy('processing_time')
+        setSortOrder('desc')
+        break
+      case 'highest_confidence':
+        setSortBy('accuracy_score')
+        setSortOrder('desc')
+        break
+      case 'lowest_confidence':
+        setSortBy('accuracy_score')
+        setSortOrder('asc')
+        break
+      case 'newest':
+        setSortBy('created_at')
+        setSortOrder('desc')
+        break
+      case 'oldest':
+        setSortBy('created_at')
+        setSortOrder('asc')
+        break
+      default:
+        break
+    }
+    setPage(0)
   }
 
   const getSuccessRate = () => {
@@ -342,6 +475,46 @@ const ResultsPage: React.FC = () => {
               sx={{ minWidth: 200 }}
             />
             
+            <TextField
+              size="small"
+              label="Start Date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{ minWidth: 160 }}
+            />
+            
+            <TextField
+              size="small"
+              label="End Date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{ minWidth: 160 }}
+            />
+
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Sort By</InputLabel>
+              <Select
+                value={quickSort}
+                label="Sort By"
+                onChange={(e) => handleQuickSort(e.target.value)}
+              >
+                <MenuItem value="newest">🕒 Newest First</MenuItem>
+                <MenuItem value="oldest">🕰️ Oldest First</MenuItem>
+                <MenuItem value="fastest">⚡ Fastest Time</MenuItem>
+                <MenuItem value="slowest">🐌 Slowest Time</MenuItem>
+                <MenuItem value="highest_confidence">🎯 Highest Confidence</MenuItem>
+                <MenuItem value="lowest_confidence">📉 Lowest Confidence</MenuItem>
+              </Select>
+            </FormControl>
+            
             <Button
               variant="outlined"
               size="small"
@@ -349,6 +522,14 @@ const ResultsPage: React.FC = () => {
                 setSelectedProvider('')
                 setSelectedLanguage('')
                 setSearchTerm('')
+                // Reset to default last 7 days
+                const date = new Date()
+                date.setDate(date.getDate() - 7)
+                setStartDate(date.toISOString().split('T')[0])
+                setEndDate(new Date().toISOString().split('T')[0])
+                setQuickSort('newest')
+                setSortBy('created_at')
+                setSortOrder('desc')
                 setPage(0)
               }}
             >
@@ -361,6 +542,95 @@ const ResultsPage: React.FC = () => {
               {error}
             </Alert>
           )}
+
+          {/* Leaderboard Section */}
+          {!loading && leaderboard.length > 0 && (
+            <Card sx={{ mb: 3, borderRadius: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  🏆 Provider Leaderboard - Fastest Response Times
+                  <Chip 
+                    size="small" 
+                    label={`${filteredResults.length} tests`}
+                    variant="outlined"
+                  />
+                </Typography>
+                
+                <Grid container spacing={2}>
+                  {leaderboard.map((provider, index) => (
+                    <Grid item xs={12} sm={6} md={4} key={provider.provider}>
+                      <Card 
+                        sx={{ 
+                          position: 'relative',
+                          borderRadius: 2,
+                          border: index < 3 ? '2px solid' : '1px solid',
+                          borderColor: index === 0 ? '#ffd700' : index === 1 ? '#c0c0c0' : index === 2 ? '#cd7f32' : 'divider',
+                          background: index < 3 ? 'linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,255,255,0.05) 100%)' : 'background.paper'
+                        }}
+                      >
+                        <CardContent>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Typography variant="h4" component="span">
+                              {getMedalEmoji(index)}
+                            </Typography>
+                            <Avatar
+                              sx={{ 
+                                bgcolor: provider.color, 
+                                width: 32, 
+                                height: 32,
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              {provider.provider.charAt(0)}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" fontWeight="600" noWrap>
+                                {provider.provider}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {provider.totalTests} tests
+                              </Typography>
+                            </Box>
+                          </Box>
+                          
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                Avg Time
+                              </Typography>
+                              <Typography variant="h6" color="primary" fontWeight="600">
+                                {provider.avgTime.toFixed(2)}s
+                              </Typography>
+                            </Box>
+                            <Box sx={{ textAlign: 'right' }}>
+                              <Typography variant="body2" color="text.secondary">
+                                Avg Confidence
+                              </Typography>
+                              <Typography variant="body1" fontWeight="600">
+                                {provider.avgConfidence.toFixed(1)}%
+                              </Typography>
+                            </Box>
+                          </Box>
+                          
+                          <Box sx={{ mt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Chip
+                              size="small"
+                              label={`⚡ ${provider.fastestTime.toFixed(2)}s`}
+                              color="success"
+                              variant="outlined"
+                            />
+                            <Typography variant="caption" color="text.secondary">
+                              Best Time
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
           
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -372,23 +642,78 @@ const ResultsPage: React.FC = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Provider</TableCell>
-                      <TableCell>Language</TableCell>
-                      <TableCell>Model</TableCell>
+                      <TableCell 
+                        sx={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => handleSort('provider')}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          Provider
+                          {sortBy === 'provider' && (
+                            sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell 
+                        sx={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => handleSort('language_code')}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          Language
+                          {sortBy === 'language_code' && (
+                            sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell 
+                        sx={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => handleSort('model_id')}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          Model
+                          {sortBy === 'model_id' && (
+                            sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                          )}
+                        </Box>
+                      </TableCell>
                       <TableCell>Transcription</TableCell>
-                      <TableCell align="center">
+                      <TableCell 
+                        align="center"
+                        sx={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => handleSort('processing_time')}
+                      >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                           <Speed fontSize="small" />
                           Processing Time
+                          {sortBy === 'processing_time' && (
+                            sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                          )}
                         </Box>
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell 
+                        align="center"
+                        sx={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => handleSort('accuracy_score')}
+                      >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                           <Visibility fontSize="small" />
                           Confidence
+                          {sortBy === 'accuracy_score' && (
+                            sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                          )}
                         </Box>
                       </TableCell>
-                      <TableCell align="center">Date</TableCell>
+                      <TableCell 
+                        align="center"
+                        sx={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => handleSort('created_at')}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                          Date
+                          {sortBy === 'created_at' && (
+                            sortOrder === 'asc' ? <ArrowUpward fontSize="small" /> : <ArrowDownward fontSize="small" />
+                          )}
+                        </Box>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -484,7 +809,7 @@ const ResultsPage: React.FC = () => {
               <TablePagination
                 rowsPerPageOptions={[10, 25, 50, 100]}
                 component="div"
-                count={filteredResults.length}
+                count={sortedResults.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handleChangePage}

@@ -1,0 +1,689 @@
+{
+  "languages": {
+    "en-US": {
+      "name": "English (United States)",
+      "flag": "🇺🇸",
+      "region": "North America"
+    },
+    "en-GB": {
+      "name": "English (United Kingdom)",
+      "flag": "🇬🇧",
+      "region": "Europe"
+    },
+    "en-IN": {
+      "name": "English (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "hi-IN": {
+      "name": "Hindi (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "es-ES": {
+      "name": "Spanish (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "fr-FR": {
+      "name": "French (France)",
+      "flag": "🇫🇷",
+      "region": "Europe"
+    },
+    "de-DE": {
+      "name": "German (Germany)",
+      "flag": "🇩🇪",
+      "region": "Europe"
+    },
+    "it-IT": {
+      "name": "Italian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "pt-BR": {
+      "name": "Portuguese (Brazil)",
+      "flag": "🇧🇷",
+      "region": "South America"
+    },
+    "ru-RU": {
+      "name": "Russian (Russia)",
+      "flag": "🇷🇺",
+      "region": "Europe"
+    },
+    "ja-JP": {
+      "name": "Japanese (Japan)",
+      "flag": "🇯🇵",
+      "region": "Asia"
+    },
+    "ko-KR": {
+      "name": "Korean (South Korea)",
+      "flag": "🇰🇷",
+      "region": "Asia"
+    },
+    "zh-CN": {
+      "name": "Chinese (Simplified)",
+      "flag": "🇨🇳",
+      "region": "Asia"
+    },
+    "ar-SA": {
+      "name": "Arabic (Saudi Arabia)",
+      "flag": "🇸🇦",
+      "region": "Middle East"
+    },
+    "nl-NL": {
+      "name": "Dutch (Netherlands)",
+      "flag": "🇳🇱",
+      "region": "Europe"
+    },
+    "pl-PL": {
+      "name": "Polish (Poland)",
+      "flag": "🇵🇱",
+      "region": "Europe"
+    },
+    "sv-SE": {
+      "name": "Swedish (Sweden)",
+      "flag": "🇸🇪",
+      "region": "Europe"
+    },
+    "tr-TR": {
+      "name": "Turkish (Turkey)",
+      "flag": "🇹🇷",
+      "region": "Europe"
+    },
+    "no-NO": {
+      "name": "Norwegian (Norway)",
+      "flag": "🇳🇴",
+      "region": "Europe"
+    },
+    "da-DK": {
+      "name": "Danish (Denmark)",
+      "flag": "🇩🇰",
+      "region": "Europe"
+    },
+    "fi-FI": {
+      "name": "Finnish (Finland)",
+      "flag": "🇫🇮",
+      "region": "Europe"
+    },
+    "el-GR": {
+      "name": "Greek (Greece)",
+      "flag": "🇬🇷",
+      "region": "Europe"
+    },
+    "he-IL": {
+      "name": "Hebrew (Israel)",
+      "flag": "🇮🇱",
+      "region": "Middle East"
+    },
+    "cs-CZ": {
+      "name": "Czech (Czech Republic)",
+      "flag": "🇨🇿",
+      "region": "Europe"
+    },
+    "sk-SK": {
+      "name": "Slovak (Slovakia)",
+      "flag": "🇸🇰",
+      "region": "Europe"
+    },
+    "hu-HU": {
+      "name": "Hungarian (Hungary)",
+      "flag": "🇭🇺",
+      "region": "Europe"
+    },
+    "ro-RO": {
+      "name": "Romanian (Romania)",
+      "flag": "🇷🇴",
+      "region": "Europe"
+    },
+    "bg-BG": {
+      "name": "Bulgarian (Bulgaria)",
+      "flag": "🇧🇬",
+      "region": "Europe"
+    },
+    "hr-HR": {
+      "name": "Croatian (Croatia)",
+      "flag": "🇭🇷",
+      "region": "Europe"
+    },
+    "sl-SI": {
+      "name": "Slovenian (Slovenia)",
+      "flag": "🇸🇮",
+      "region": "Europe"
+    },
+    "et-EE": {
+      "name": "Estonian (Estonia)",
+      "flag": "🇪🇪",
+      "region": "Europe"
+    },
+    "lv-LV": {
+      "name": "Latvian (Latvia)",
+      "flag": "🇱🇻",
+      "region": "Europe"
+    },
+    "lt-LT": {
+      "name": "Lithuanian (Lithuania)",
+      "flag": "🇱🇹",
+      "region": "Europe"
+    },
+    "mt-MT": {
+      "name": "Maltese (Malta)",
+      "flag": "🇲🇹",
+      "region": "Europe"
+    },
+    "is-IS": {
+      "name": "Icelandic (Iceland)",
+      "flag": "🇮🇸",
+      "region": "Europe"
+    },
+    "ga-IE": {
+      "name": "Irish (Ireland)",
+      "flag": "🇮🇪",
+      "region": "Europe"
+    },
+    "cy-GB": {
+      "name": "Welsh (United Kingdom)",
+      "flag": "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
+      "region": "Europe"
+    },
+    "eu-ES": {
+      "name": "Basque (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "ca-ES": {
+      "name": "Catalan (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "gl-ES": {
+      "name": "Galician (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "ast-ES": {
+      "name": "Asturian (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "oc-FR": {
+      "name": "Occitan (France)",
+      "flag": "🇫🇷",
+      "region": "Europe"
+    },
+    "br-FR": {
+      "name": "Breton (France)",
+      "flag": "🇫🇷",
+      "region": "Europe"
+    },
+    "co-FR": {
+      "name": "Corsican (France)",
+      "flag": "🇫🇷",
+      "region": "Europe"
+    },
+    "gsw-CH": {
+      "name": "Swiss German (Switzerland)",
+      "flag": "🇨🇭",
+      "region": "Europe"
+    },
+    "lb-LU": {
+      "name": "Luxembourgish (Luxembourg)",
+      "flag": "🇱🇺",
+      "region": "Europe"
+    },
+    "rm-CH": {
+      "name": "Romansh (Switzerland)",
+      "flag": "🇨🇭",
+      "region": "Europe"
+    },
+    "fur-IT": {
+      "name": "Friulian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "sc-IT": {
+      "name": "Sardinian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "vec-IT": {
+      "name": "Venetian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "lij-IT": {
+      "name": "Ligurian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "nap-IT": {
+      "name": "Neapolitan (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "scn-IT": {
+      "name": "Sicilian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "srd-IT": {
+      "name": "Sardinian (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "lmo-IT": {
+      "name": "Lombard (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "pms-IT": {
+      "name": "Piedmontese (Italy)",
+      "flag": "🇮🇹",
+      "region": "Europe"
+    },
+    "lad-ES": {
+      "name": "Ladino (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "an-ES": {
+      "name": "Aragonese (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "ext-ES": {
+      "name": "Extremaduran (Spain)",
+      "flag": "🇪🇸",
+      "region": "Europe"
+    },
+    "mwl-PT": {
+      "name": "Mirandese (Portugal)",
+      "flag": "🇵🇹",
+      "region": "Europe"
+    },
+    "miw-PT": {
+      "name": "Mirandese (Portugal)",
+      "flag": "🇵🇹",
+      "region": "Europe"
+    },
+    "tet-TL": {
+      "name": "Tetum (Timor-Leste)",
+      "flag": "🇹🇱",
+      "region": "Asia"
+    },
+    "war-PH": {
+      "name": "Waray (Philippines)",
+      "flag": "🇵🇭",
+      "region": "Asia"
+    },
+    "ceb-PH": {
+      "name": "Cebuano (Philippines)",
+      "flag": "🇵🇭",
+      "region": "Asia"
+    },
+    "hil-PH": {
+      "name": "Hiligaynon (Philippines)",
+      "flag": "🇵🇭",
+      "region": "Asia"
+    },
+    "ilo-PH": {
+      "name": "Ilocano (Philippines)",
+      "flag": "🇵🇭",
+      "region": "Asia"
+    },
+    "pam-PH": {
+      "name": "Kapampangan (Philippines)",
+      "flag": "🇵🇭",
+      "region": "Asia"
+    },
+    "bcl-PH": {
+      "name": "Bikol (Philippines)",
+      "flag": "🇵🇭",
+      "region": "Asia"
+    },
+    "tl-PH": {
+      "name": "Filipino (Philippines)",
+      "flag": "🇵🇭",
+      "region": "Asia"
+    },
+    "id-ID": {
+      "name": "Indonesian (Indonesia)",
+      "flag": "🇮🇩",
+      "region": "Asia"
+    },
+    "jv-ID": {
+      "name": "Javanese (Indonesia)",
+      "flag": "🇮🇩",
+      "region": "Asia"
+    },
+    "su-ID": {
+      "name": "Sundanese (Indonesia)",
+      "flag": "🇮🇩",
+      "region": "Asia"
+    },
+    "mad-ID": {
+      "name": "Madurese (Indonesia)",
+      "flag": "🇮🇩",
+      "region": "Asia"
+    },
+    "ms-MY": {
+      "name": "Malay (Malaysia)",
+      "flag": "🇲🇾",
+      "region": "Asia"
+    },
+    "th-TH": {
+      "name": "Thai (Thailand)",
+      "flag": "🇹🇭",
+      "region": "Asia"
+    },
+    "vi-VN": {
+      "name": "Vietnamese (Vietnam)",
+      "flag": "🇻🇳",
+      "region": "Asia"
+    },
+    "lo-LA": {
+      "name": "Lao (Laos)",
+      "flag": "🇱🇦",
+      "region": "Asia"
+    },
+    "my-MM": {
+      "name": "Myanmar (Myanmar)",
+      "flag": "🇲🇲",
+      "region": "Asia"
+    },
+    "km-KH": {
+      "name": "Khmer (Cambodia)",
+      "flag": "🇰🇭",
+      "region": "Asia"
+    },
+    "ka-GE": {
+      "name": "Georgian (Georgia)",
+      "flag": "🇬🇪",
+      "region": "Europe"
+    },
+    "hy-AM": {
+      "name": "Armenian (Armenia)",
+      "flag": "🇦🇲",
+      "region": "Europe"
+    },
+    "az-AZ": {
+      "name": "Azerbaijani (Azerbaijan)",
+      "flag": "🇦🇿",
+      "region": "Europe"
+    },
+    "kk-KZ": {
+      "name": "Kazakh (Kazakhstan)",
+      "flag": "🇰🇿",
+      "region": "Asia"
+    },
+    "ky-KG": {
+      "name": "Kyrgyz (Kyrgyzstan)",
+      "flag": "🇰🇬",
+      "region": "Asia"
+    },
+    "uz-UZ": {
+      "name": "Uzbek (Uzbekistan)",
+      "flag": "🇺🇿",
+      "region": "Asia"
+    },
+    "tk-TM": {
+      "name": "Turkmen (Turkmenistan)",
+      "flag": "🇹🇲",
+      "region": "Asia"
+    },
+    "mn-MN": {
+      "name": "Mongolian (Mongolia)",
+      "flag": "🇲🇳",
+      "region": "Asia"
+    },
+    "ne-NP": {
+      "name": "Nepali (Nepal)",
+      "flag": "🇳🇵",
+      "region": "Asia"
+    },
+    "si-LK": {
+      "name": "Sinhala (Sri Lanka)",
+      "flag": "🇱🇰",
+      "region": "Asia"
+    },
+    "bn-BD": {
+      "name": "Bengali (Bangladesh)",
+      "flag": "🇧🇩",
+      "region": "Asia"
+    },
+    "as-IN": {
+      "name": "Assamese (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "or-IN": {
+      "name": "Odia (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "pa-IN": {
+      "name": "Punjabi (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "gu-IN": {
+      "name": "Gujarati (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ta-IN": {
+      "name": "Tamil (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "te-IN": {
+      "name": "Telugu (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "kn-IN": {
+      "name": "Kannada (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ml-IN": {
+      "name": "Malayalam (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "mr-IN": {
+      "name": "Marathi (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "sa-IN": {
+      "name": "Sanskrit (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ur-PK": {
+      "name": "Urdu (Pakistan)",
+      "flag": "🇵🇰",
+      "region": "Asia"
+    },
+    "ps-AF": {
+      "name": "Pashto (Afghanistan)",
+      "flag": "🇦🇫",
+      "region": "Asia"
+    },
+    "fa-IR": {
+      "name": "Persian (Iran)",
+      "flag": "🇮🇷",
+      "region": "Middle East"
+    },
+    "tg-TJ": {
+      "name": "Tajik (Tajikistan)",
+      "flag": "🇹🇯",
+      "region": "Asia"
+    },
+    "sw-KE": {
+      "name": "Swahili (Kenya)",
+      "flag": "🇰🇪",
+      "region": "Africa"
+    },
+    "am-ET": {
+      "name": "Amharic (Ethiopia)",
+      "flag": "🇪🇹",
+      "region": "Africa"
+    },
+    "ti-ET": {
+      "name": "Tigrinya (Ethiopia)",
+      "flag": "🇪🇹",
+      "region": "Africa"
+    },
+    "om-ET": {
+      "name": "Oromo (Ethiopia)",
+      "flag": "🇪🇹",
+      "region": "Africa"
+    },
+    "so-SO": {
+      "name": "Somali (Somalia)",
+      "flag": "🇸🇴",
+      "region": "Africa"
+    },
+    "rw-RW": {
+      "name": "Kinyarwanda (Rwanda)",
+      "flag": "🇷🇼",
+      "region": "Africa"
+    },
+    "lg-UG": {
+      "name": "Luganda (Uganda)",
+      "flag": "🇺🇬",
+      "region": "Africa"
+    },
+    "ln-CD": {
+      "name": "Lingala (Congo)",
+      "flag": "🇨🇩",
+      "region": "Africa"
+    },
+    "wo-SN": {
+      "name": "Wolof (Senegal)",
+      "flag": "🇸🇳",
+      "region": "Africa"
+    },
+    "ff-SN": {
+      "name": "Fulah (Senegal)",
+      "flag": "🇸🇳",
+      "region": "Africa"
+    },
+    "yo-NG": {
+      "name": "Yoruba (Nigeria)",
+      "flag": "🇳🇬",
+      "region": "Africa"
+    },
+    "ig-NG": {
+      "name": "Igbo (Nigeria)",
+      "flag": "🇳🇬",
+      "region": "Africa"
+    },
+    "ha-NG": {
+      "name": "Hausa (Nigeria)",
+      "flag": "🇳🇬",
+      "region": "Africa"
+    },
+    "zu-ZA": {
+      "name": "Zulu (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "xh-ZA": {
+      "name": "Xhosa (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "af-ZA": {
+      "name": "Afrikaans (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "nso-ZA": {
+      "name": "Northern Sotho (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "tn-ZA": {
+      "name": "Setswana (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "st-ZA": {
+      "name": "Sesotho (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "ts-ZA": {
+      "name": "Tsonga (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "ss-ZA": {
+      "name": "Swati (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "ve-ZA": {
+      "name": "Venda (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "nr-ZA": {
+      "name": "Ndebele (South Africa)",
+      "flag": "🇿🇦",
+      "region": "Africa"
+    },
+    "bn-IN": {
+      "name": "Bengali (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "brx-IN": {
+      "name": "Bodo (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "doi-IN": {
+      "name": "Dogri (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "kok-IN": {
+      "name": "Konkani (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ks-IN": {
+      "name": "Kashmiri (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "mai-IN": {
+      "name": "Maithili (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "mni-IN": {
+      "name": "Manipuri (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "sat-IN": {
+      "name": "Santali (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "sd-IN": {
+      "name": "Sindhi (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    },
+    "ur-IN": {
+      "name": "Urdu (India)",
+      "flag": "🇮🇳",
+      "region": "India"
+    }
+  }
+}

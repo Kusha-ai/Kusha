@@ -16,7 +16,28 @@ class ProviderManager:
         
         self.providers_dir = Path(providers_dir)
         self.providers = {}
+        
+        # Load centralized language pack
+        self._load_language_pack()
         self._load_providers()
+    
+    def _load_language_pack(self):
+        """Load centralized language pack"""
+        try:
+            # Load language pack from config folder
+            language_pack_file = Path(__file__).parent.parent / 'config' / 'language_pack.json'
+            
+            if language_pack_file.exists():
+                with open(language_pack_file, 'r', encoding='utf-8') as f:
+                    language_pack = json.load(f)
+                    self.language_pack = language_pack.get('languages', {})
+            else:
+                print(f"Language pack not found: {language_pack_file}")
+                self.language_pack = {}
+                
+        except Exception as e:
+            print(f"Error loading language pack: {e}")
+            self.language_pack = {}
     
     def _load_providers(self):
         """Load all providers from the providers directory"""
@@ -77,31 +98,42 @@ class ProviderManager:
             print(f"Error loading provider {provider_name}: {e}")
     
     def get_all_languages(self) -> List[Dict]:
-        """Get all languages from all providers"""
-        all_languages = {}
+        """Get all languages from centralized language pack, filtered by provider support"""
+        supported_languages = {}
         
+        # Collect all language codes supported by providers
         for provider_id, provider_info in self.providers.items():
             config = provider_info['config']
-            languages = config.get('languages', {})
+            provider_models = config.get('models', [])
             
-            for lang_code, lang_info in languages.items():
-                if lang_code not in all_languages:
-                    all_languages[lang_code] = lang_info.copy()
-                    all_languages[lang_code]['providers'] = []
-                
-                if provider_id not in all_languages[lang_code]['providers']:
-                    all_languages[lang_code]['providers'].append(provider_id)
+            for model in provider_models:
+                for lang_code in model.get('supported_languages', []):
+                    if lang_code not in supported_languages:
+                        supported_languages[lang_code] = []
+                    if provider_id not in supported_languages[lang_code]:
+                        supported_languages[lang_code].append(provider_id)
         
-        # Convert to list format expected by frontend
+        # Build language list using centralized language pack
         languages_list = []
-        for lang_code, lang_info in all_languages.items():
-            languages_list.append({
-                'code': lang_code,
-                'name': lang_info['name'],
-                'flag': lang_info.get('flag', '🌐'),
-                'region': lang_info.get('region', 'Other'),
-                'providers': lang_info['providers']
-            })
+        for lang_code in supported_languages:
+            if lang_code in self.language_pack:
+                lang_info = self.language_pack[lang_code]
+                languages_list.append({
+                    'code': lang_code,
+                    'name': lang_info['name'],
+                    'flag': lang_info.get('flag', '🌐'),
+                    'region': lang_info.get('region', 'Other'),
+                    'providers': supported_languages[lang_code]
+                })
+            else:
+                # Fallback for languages not in language pack
+                languages_list.append({
+                    'code': lang_code,
+                    'name': lang_code.upper(),
+                    'flag': '🌐',
+                    'region': 'Other',
+                    'providers': supported_languages[lang_code]
+                })
         
         # Sort by region (India first) then by name
         languages_list.sort(key=lambda x: (x['region'] != 'India', x['region'], x['name']))

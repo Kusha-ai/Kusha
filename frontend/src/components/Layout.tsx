@@ -57,9 +57,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         position="static" 
         sx={{ 
           background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
+          backdropFilter: 'blur(20px)',
           color: 'primary.main',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          border: 'none',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
         <Toolbar>
@@ -153,17 +155,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Box
         component="footer"
         sx={{
-          py: 3,
+          py: 4,
           px: 2,
           mt: 'auto',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(20px)',
           color: 'white',
           textAlign: 'center',
+          borderTop: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
-        <Typography variant="body2">
-          © 2025 ASR Speed Test - Modern speech recognition testing platform
+        <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+          © 2025 ASR Speed Test Platform
+        </Typography>
+        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+          Modern speech recognition testing with 6 providers • 60+ languages • Real-time comparison
         </Typography>
       </Box>
     </Box>

@@ -23,6 +23,7 @@ from utils.database import DatabaseManager
 from utils.elasticsearch_client import es_client
 from utils.auth import admin_auth, get_current_admin
 from providers.provider_manager import ProviderManager
+from services.analytics_service import analytics_service
 
 # Initialize provider manager
 provider_manager = ProviderManager()
@@ -79,8 +80,9 @@ async def react_app():
         </html>
         """
 
-# Initialize database
-db = DatabaseManager()
+# Initialize database with persistent volume path
+os.makedirs("/app/database", exist_ok=True)
+db = DatabaseManager(db_path="/app/database/asr_config.db")
 
 @app.get("/", response_class=HTMLResponse)
 async def user_interface(request: Request):
@@ -102,8 +104,8 @@ async def user_interface(request: Request):
 # Old admin panel removed - now handled by React frontend with token authentication
 
 @app.get("/api/providers")
-async def get_providers(include_inactive: bool = False):
-    """Get available providers with their configurations (only activated ones by default)"""
+async def get_providers(activated_only: bool = False):
+    """Get available providers with their configurations (all providers by default)"""
     try:
         providers = provider_manager.get_all_providers()
         provider_statuses = db.get_all_provider_statuses()
@@ -116,10 +118,26 @@ async def get_providers(include_inactive: bool = False):
             
             # Check activation status
             status = provider_statuses.get(provider['id'], {})
-            provider['isActivated'] = status.get('is_activated', False)
+            is_activated = status.get('is_activated', False)
             
-            # Only include activated providers unless include_inactive is True
-            if include_inactive or provider['isActivated']:
+            # Auto-activate providers that don't require API keys
+            if not provider['requires_api_key'] and not is_activated:
+                success = db.update_provider_status(
+                    provider_id=provider['id'],
+                    is_activated=True,
+                    test_result="no_api_key_required",
+                    transcription="Provider automatically activated (no API key required)",
+                    model_used="auto_activation",
+                    language_used="n/a",
+                    processing_time=0.0
+                )
+                if success:
+                    is_activated = True
+            
+            provider['isActivated'] = is_activated
+            
+            # Include all providers by default, filter only if activated_only is True
+            if not activated_only or provider['isActivated']:
                 filtered_providers.append(provider)
         
         return {"providers": filtered_providers}
@@ -801,7 +819,7 @@ async def test_api_key(
     provider_id: str,
     admin_user: dict = Depends(get_current_admin)
 ):
-    """Test API key for a provider"""
+    """Test API key for a provider and activate if successful"""
     try:
         # Get API key
         api_key = db.get_api_key(provider_id)
@@ -816,7 +834,159 @@ async def test_api_key(
         # Test connection
         test_result = provider_instance.test_connection()
         
-        return {"success": True, "test_result": test_result}
+        # If connection test succeeds, activate the provider
+        if test_result.get('success', False):
+            db.update_provider_status(
+                provider_id=provider_id,
+                is_activated=True,
+                test_result="connection_success",
+                transcription="Connection test passed - provider activated",
+                model_used="connection_test",
+                language_used="n/a",
+                processing_time=0.0
+            )
+        
+        return {
+            "success": True, 
+            "test_result": test_result,
+            "provider_activated": test_result.get('success', False)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/admin/api-keys/{provider_id}/deactivate")
+async def deactivate_provider(
+    provider_id: str,
+    admin_user: dict = Depends(get_current_admin)
+):
+    """Deactivate a specific provider"""
+    try:
+        # Get provider config to verify it exists
+        provider_config = provider_manager.get_provider_config(provider_id)
+        if not provider_config:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        
+        # Deactivate the provider
+        success = db.update_provider_status(
+            provider_id=provider_id,
+            is_activated=False,
+            test_result="manual_deactivation",
+            transcription="Provider manually deactivated by admin",
+            model_used="manual_deactivation",
+            language_used="n/a",
+            processing_time=0.0
+        )
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"Provider {provider_config['provider']['name']} deactivated successfully"
+            }
+        else:
+            return {"success": False, "error": "Failed to deactivate provider"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/admin/activate-all-providers")
+async def activate_all_providers(admin_user: dict = Depends(get_current_admin)):
+    """Activate all providers that have API keys or don't require them"""
+    try:
+        providers = provider_manager.get_all_providers()
+        activated_count = 0
+        
+        for provider in providers:
+            provider_id = provider['id']
+            requires_api_key = provider['requires_api_key']
+            
+            should_activate = False
+            if requires_api_key:
+                # Provider requires API key - check if it has one
+                api_key = db.get_api_key(provider_id)
+                should_activate = bool(api_key)
+            else:
+                # Provider doesn't require API key - can be activated
+                should_activate = True
+            
+            if should_activate:
+                success = db.update_provider_status(
+                    provider_id=provider_id,
+                    is_activated=True,
+                    test_result="manual_activation",
+                    transcription="Provider manually activated by admin",
+                    model_used="manual_activation",
+                    language_used="n/a",
+                    processing_time=0.0
+                )
+                if success:
+                    activated_count += 1
+        
+        return {
+            "success": True,
+            "message": f"Activated {activated_count} providers",
+            "activated_count": activated_count
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.get("/api/admin/provider/{provider_id}/dashboard")
+async def get_provider_dashboard(
+    provider_id: str,
+    days: int = 30,
+    admin_user: dict = Depends(get_current_admin)
+):
+    """Get detailed dashboard data for a specific provider"""
+    try:
+        # Get provider config
+        provider_config = provider_manager.get_provider_config(provider_id)
+        if not provider_config:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        
+        # Get provider status
+        provider_status = db.get_provider_status(provider_id) or {}
+        
+        # Get analytics for this provider
+        analytics = analytics_service.get_provider_analytics(provider_id, days)
+        
+        # Get supported languages with details
+        languages = provider_config.get('languages', {})
+        models = provider_config.get('models', [])
+        
+        return {
+            "success": True,
+            "data": {
+                "provider_info": {
+                    "id": provider_config['provider']['id'],
+                    "name": provider_config['provider']['name'],
+                    "description": provider_config['provider']['description'],
+                    "base_url": provider_config['provider']['base_url'],
+                    "requires_api_key": provider_config['provider']['requires_api_key'],
+                    "api_key_type": provider_config['provider']['api_key_type']
+                },
+                "activation_status": {
+                    "is_activated": provider_status.get('is_activated', False),
+                    "last_test_date": provider_status.get('last_test_date'),
+                    "last_test_result": provider_status.get('last_test_result'),
+                    "test_model_used": provider_status.get('test_model_used'),
+                    "test_language_used": provider_status.get('test_language_used'),
+                    "test_processing_time": provider_status.get('test_processing_time')
+                },
+                "supported_languages": languages,
+                "available_models": models,
+                "analytics": analytics,
+                "summary": {
+                    "total_languages": len(languages),
+                    "total_models": len(models),
+                    "total_tests": analytics.get('total_tests', 0),
+                    "avg_processing_time": analytics.get('avg_processing_time', 0),
+                    "avg_confidence": analytics.get('avg_confidence', 0),
+                    "success_rate": analytics.get('success_rate', 0)
+                }
+            }
+        }
     except HTTPException:
         raise
     except Exception as e:

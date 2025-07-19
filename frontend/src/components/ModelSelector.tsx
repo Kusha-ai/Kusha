@@ -44,9 +44,17 @@ interface ModelSelectorProps {
 
 const PROVIDER_COLORS: Record<string, string> = {
   'Google Cloud Speech-to-Text': '#4285f4',
-  'Sarv ASR (Indian Languages)': '#ff6b35',
+  'Sarv ASR (Indian Languages)': '#ff6b35', 
   'ElevenLabs': '#7c3aed',
-  'Fireworks AI': '#f59e0b'
+  'Fireworks AI': '#f59e0b',
+  'Groq': '#10b981',
+  'OpenAI': '#00a67e',
+  'google': '#4285f4',
+  'sarv': '#ff6b35',
+  'elevenlabs': '#7c3aed', 
+  'fireworks': '#f59e0b',
+  'groq': '#10b981',
+  'openai': '#00a67e',
 }
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
@@ -97,7 +105,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   const filteredModels = availableModels.filter(model => {
     const matchesSearch = model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          model.provider_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (model.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+                         (model.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+                         (model.features?.some(feature => 
+                           feature.toLowerCase().includes(searchTerm.toLowerCase())
+                         ) ?? false)
     
     // Only show models with API keys available
     return matchesSearch && model.hasApiKey
@@ -166,7 +177,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       {/* Search */}
       <TextField
         fullWidth
-        placeholder="Search models..."
+        placeholder="Search models, providers, features, or descriptions..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         InputProps={{
@@ -178,6 +189,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
         }}
         sx={{ mb: 2 }}
         size="small"
+        helperText={`Showing ${filteredModels.length} model(s) for ${language || 'selected language'}`}
       />
       
       {/* Models by Provider */}

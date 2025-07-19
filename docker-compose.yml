@@ -42,13 +42,14 @@ services:
       - SERVER_PORT=5005
       - ADMIN_TOKEN=asr-admin-token-2025
       - SARV_ASR_URL=http://103.255.103.118:5001
-      - DATABASE_URL=sqlite:///asr_config.db
+      - DATABASE_URL=sqlite:////app/database/asr_config.db
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - DEBUG=False
       - ENVIRONMENT=production
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+      - asr-database:/app/database
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5005/api/providers"]
@@ -68,6 +69,8 @@ networks:
 
 volumes:
   asr-data:
+    driver: local
+  asr-database:
     driver: local
   elasticsearch-data:
     driver: local

@@ -176,12 +176,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh' }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 4,
+        p: 3,
+        borderRadius: 3,
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <DashboardIcon sx={{ fontSize: '2rem', color: 'primary.main' }} />
-          <Typography variant="h4" fontWeight="600">
+          <DashboardIcon sx={{ fontSize: '2rem', color: 'white' }} />
+          <Typography variant="h4" fontWeight="600" color="white" sx={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>
             Admin Dashboard
           </Typography>
         </Box>
@@ -211,10 +221,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
           )}
           
           <Button
-            variant="outlined"
+            variant="contained"
             startIcon={<Logout />}
             onClick={onLogout}
             size="small"
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              },
+            }}
           >
             Logout
           </Button>
@@ -222,17 +240,51 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
       </Box>
 
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)}>
+      <Box sx={{ 
+        mb: 3,
+        background: 'rgba(255, 255, 255, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: 3,
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+      }}>
+        <Tabs 
+          value={currentTab} 
+          onChange={(_, newValue) => setCurrentTab(newValue)}
+          sx={{
+            '& .MuiTab-root': {
+              minHeight: 72,
+              fontSize: '1rem',
+              fontWeight: 600,
+              color: 'text.secondary',
+              '&.Mui-selected': {
+                color: 'primary.main',
+                fontWeight: 700,
+              },
+            },
+            '& .MuiTabs-indicator': {
+              height: 3,
+              borderRadius: '3px 3px 0 0',
+            },
+          }}
+        >
           <Tab
             icon={<Analytics />}
             label="Analytics Dashboard"
-            sx={{ minHeight: 72 }}
+            iconPosition="start"
+            sx={{ 
+              minHeight: 72,
+              gap: 1,
+            }}
           />
           <Tab
             icon={<VpnKey />}
             label="API Key Management"
-            sx={{ minHeight: 72 }}
+            iconPosition="start"
+            sx={{ 
+              minHeight: 72,
+              gap: 1,
+            }}
           />
         </Tabs>
       </Box>
@@ -326,7 +378,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
       <Grid container spacing={3}>
         {/* Provider Performance */}
         <Grid item xs={12} lg={6}>
-          <Card sx={{ height: '100%' }}>
+          <Card sx={{ 
+            height: '100%',
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Analytics color="primary" />
@@ -374,7 +432,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
 
         {/* Language Performance */}
         <Grid item xs={12} lg={6}>
-          <Card sx={{ height: '100%' }}>
+          <Card sx={{ 
+            height: '100%',
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Language color="primary" />
@@ -423,7 +487,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
 
         {/* Recording Length Analysis */}
         <Grid item xs={12} lg={6}>
-          <Card sx={{ height: '100%' }}>
+          <Card sx={{ 
+            height: '100%',
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <GraphicEq color="primary" />
@@ -464,7 +534,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
 
         {/* Recent Tests */}
         <Grid item xs={12} lg={6}>
-          <Card sx={{ height: '100%' }}>
+          <Card sx={{ 
+            height: '100%',
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Timer color="primary" />

@@ -99,13 +99,20 @@ const AdminPage: React.FC = () => {
       <Fade in timeout={500}>
         <Box sx={{ textAlign: 'center' }}>
           {/* Header */}
-          <Box sx={{ mb: 6 }}>
+          <Box sx={{ 
+            mb: 6,
+            p: 4,
+            borderRadius: 3,
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+          }}>
             <AdminPanelSettings 
               sx={{ 
                 fontSize: '4rem', 
-                color: 'primary.main',
+                color: 'white',
                 mb: 2,
-                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'
+                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'
               }} 
             />
             <Typography
@@ -113,19 +120,22 @@ const AdminPage: React.FC = () => {
               component="h1"
               sx={{
                 fontWeight: 700,
-                background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: 'white',
                 mb: 2,
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
               }}
             >
               Admin Dashboard
             </Typography>
             <Typography
               variant="h6"
-              color="text.secondary"
-              sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}
+              sx={{ 
+                color: 'rgba(255, 255, 255, 0.95)',
+                mb: 4, 
+                maxWidth: 600, 
+                mx: 'auto',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+              }}
             >
               Access comprehensive analytics, performance metrics, and system management tools for the ASR Speed Test Platform
             </Typography>
@@ -151,13 +161,14 @@ const AdminPage: React.FC = () => {
           }}>
             <Box sx={{ 
               p: 3, 
-              border: '1px solid', 
-              borderColor: 'divider',
               borderRadius: 3,
-              backgroundColor: 'background.paper'
+              background: 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             }}>
               <Dashboard sx={{ fontSize: '2rem', color: 'primary.main', mb: 2 }} />
-              <Typography variant="h6" fontWeight="600" gutterBottom>
+              <Typography variant="h6" fontWeight="600" gutterBottom color="primary.main">
                 Performance Analytics
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -167,13 +178,14 @@ const AdminPage: React.FC = () => {
 
             <Box sx={{ 
               p: 3, 
-              border: '1px solid', 
-              borderColor: 'divider',
               borderRadius: 3,
-              backgroundColor: 'background.paper'
+              background: 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             }}>
               <Box sx={{ fontSize: '2rem', color: 'primary.main', mb: 2 }}>📊</Box>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
+              <Typography variant="h6" fontWeight="600" gutterBottom color="primary.main">
                 Language Insights
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -183,13 +195,14 @@ const AdminPage: React.FC = () => {
 
             <Box sx={{ 
               p: 3, 
-              border: '1px solid', 
-              borderColor: 'divider',
               borderRadius: 3,
-              backgroundColor: 'background.paper'
+              background: 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             }}>
               <Box sx={{ fontSize: '2rem', color: 'primary.main', mb: 2 }}>🎵</Box>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
+              <Typography variant="h6" fontWeight="600" gutterBottom color="primary.main">
                 Recording Analysis
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -199,13 +212,14 @@ const AdminPage: React.FC = () => {
 
             <Box sx={{ 
               p: 3, 
-              border: '1px solid', 
-              borderColor: 'divider',
               borderRadius: 3,
-              backgroundColor: 'background.paper'
+              background: 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             }}>
               <Box sx={{ fontSize: '2rem', color: 'primary.main', mb: 2 }}>⚡</Box>
-              <Typography variant="h6" fontWeight="600" gutterBottom>
+              <Typography variant="h6" fontWeight="600" gutterBottom color="primary.main">
                 Real-time Monitoring
               </Typography>
               <Typography variant="body2" color="text.secondary">

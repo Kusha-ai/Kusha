@@ -66,17 +66,23 @@ const HomePage: React.FC = () => {
   return (
     <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
       {/* Header */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
+      <Box sx={{ 
+        textAlign: 'center', 
+        mb: 4,
+        p: 4,
+        borderRadius: 3,
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+      }}>
         <Typography
           variant="h2"
           component="h1"
           sx={{
             fontWeight: 700,
-            background: 'linear-gradient(45deg, #ffffff 30%, #f8fafc 90%)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
+            color: 'white',
             mb: 2,
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
           }}
         >
           ASR Speed Test Platform
@@ -84,26 +90,64 @@ const HomePage: React.FC = () => {
         <Typography
           variant="h6"
           sx={{
-            color: 'rgba(255, 255, 255, 0.9)',
-            mb: 4,
+            color: 'rgba(255, 255, 255, 0.95)',
+            mb: 2,
             maxWidth: 600,
             mx: 'auto',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
           }}
         >
           Test and compare speech recognition providers across multiple languages and models
         </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <Chip 
+            label="6 Providers" 
+            sx={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              fontWeight: 600,
+            }} 
+          />
+          <Chip 
+            label="60+ Languages" 
+            sx={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              fontWeight: 600,
+            }} 
+          />
+          <Chip 
+            label="Real-time Testing" 
+            sx={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              fontWeight: 600,
+            }} 
+          />
+        </Box>
       </Box>
       
       {/* Progress Indicator */}
       {(providersLoading || languagesLoading || isLoading) && (
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ 
+          mb: 3, 
+          p: 2,
+          borderRadius: 2,
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}>
+          <Typography variant="body2" color="white" sx={{ mb: 2, textAlign: 'center' }}>
+            {providersLoading ? 'Loading providers...' : languagesLoading ? 'Loading languages...' : 'Running tests...'}
+          </Typography>
           <LinearProgress 
             sx={{ 
-              borderRadius: 2,
-              height: 6,
+              borderRadius: 3,
+              height: 8,
               backgroundColor: 'rgba(255, 255, 255, 0.2)',
               '& .MuiLinearProgress-bar': {
                 backgroundColor: 'white',
+                borderRadius: 3,
               },
             }} 
           />
@@ -113,15 +157,32 @@ const HomePage: React.FC = () => {
       <Grid container spacing={4}>
         {/* Step 1: Language Selection */}
         <Grid item xs={12} lg={4}>
-          <Card sx={{ height: '100%', background: 'rgba(255, 255, 255, 0.95)' }}>
+          <Card sx={{ 
+            height: '100%', 
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                  <Typography variant="h6" fontWeight="bold">1</Typography>
+                <Avatar sx={{ 
+                  bgcolor: 'primary.main', 
+                  mr: 2, 
+                  width: 48, 
+                  height: 48,
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                }}>
+                  <Typography variant="h5" fontWeight="bold">1</Typography>
                 </Avatar>
-                <Typography variant="h5" fontWeight="600">
-                  Select Language
-                </Typography>
+                <Box>
+                  <Typography variant="h5" fontWeight="600" color="primary.main">
+                    Select Language
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Step 1 of 3
+                  </Typography>
+                </Box>
               </Box>
               
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -148,15 +209,32 @@ const HomePage: React.FC = () => {
         
         {/* Step 2: Model Selection */}
         <Grid item xs={12} lg={4}>
-          <Card sx={{ height: '100%', background: 'rgba(255, 255, 255, 0.95)' }}>
+          <Card sx={{ 
+            height: '100%', 
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Avatar sx={{ bgcolor: selectedLanguage ? 'primary.main' : 'grey.400', mr: 2 }}>
-                  <Typography variant="h6" fontWeight="bold">2</Typography>
+                <Avatar sx={{ 
+                  bgcolor: selectedLanguage ? 'primary.main' : 'grey.400', 
+                  mr: 2,
+                  width: 48, 
+                  height: 48,
+                  boxShadow: selectedLanguage ? '0 4px 12px rgba(102, 126, 234, 0.3)' : '0 4px 12px rgba(148, 163, 184, 0.3)',
+                }}>
+                  <Typography variant="h5" fontWeight="bold">2</Typography>
                 </Avatar>
-                <Typography variant="h5" fontWeight="600">
-                  Select Models
-                </Typography>
+                <Box>
+                  <Typography variant="h5" fontWeight="600" color={selectedLanguage ? 'primary.main' : 'grey.500'}>
+                    Select Models
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Step 2 of 3
+                  </Typography>
+                </Box>
               </Box>
               
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -201,15 +279,32 @@ const HomePage: React.FC = () => {
         
         {/* Step 3: Audio Input */}
         <Grid item xs={12} lg={4}>
-          <Card sx={{ height: '100%', background: 'rgba(255, 255, 255, 0.95)' }}>
+          <Card sx={{ 
+            height: '100%', 
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Avatar sx={{ bgcolor: selectedModels.length > 0 ? 'primary.main' : 'grey.400', mr: 2 }}>
-                  <Typography variant="h6" fontWeight="bold">3</Typography>
+                <Avatar sx={{ 
+                  bgcolor: selectedModels.length > 0 ? 'primary.main' : 'grey.400', 
+                  mr: 2,
+                  width: 48, 
+                  height: 48,
+                  boxShadow: selectedModels.length > 0 ? '0 4px 12px rgba(102, 126, 234, 0.3)' : '0 4px 12px rgba(148, 163, 184, 0.3)',
+                }}>
+                  <Typography variant="h5" fontWeight="bold">3</Typography>
                 </Avatar>
-                <Typography variant="h5" fontWeight="600">
-                  Audio Input
-                </Typography>
+                <Box>
+                  <Typography variant="h5" fontWeight="600" color={selectedModels.length > 0 ? 'primary.main' : 'grey.500'}>
+                    Audio Input
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Step 3 of 3
+                  </Typography>
+                </Box>
               </Box>
               
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -235,7 +330,12 @@ const HomePage: React.FC = () => {
         
         {/* Test Controls */}
         <Grid item xs={12}>
-          <Card sx={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+          <Card sx={{ 
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -284,7 +384,12 @@ const HomePage: React.FC = () => {
         {/* Results */}
         {testResults.length > 0 && (
           <Grid item xs={12}>
-            <Card sx={{ background: 'rgba(255, 255, 255, 0.95)' }}>
+            <Card sx={{ 
+              background: 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            }}>
               <CardContent>
                 <Typography variant="h5" fontWeight="600" sx={{ mb: 3 }}>
                   Test Results

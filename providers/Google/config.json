@@ -3,8 +3,9 @@
     "id": "google",
     "name": "Google Cloud Speech-to-Text",
     "description": "Google's cloud-based speech recognition service",
+    "base_url": "https://speech.googleapis.com/v1",
     "requires_api_key": true,
-    "api_key_type": "json_file"
+    "api_key_type": "string"
   },
   "models": [
     {
@@ -27,20 +28,6 @@
       "description": "Optimized for voice commands and search queries",
       "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN"],
       "features": ["Voice commands", "Search queries", "Low latency"]
-    },
-    {
-      "id": "phone_call",
-      "name": "Phone Call Model",
-      "description": "Optimized for phone call audio quality",
-      "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "ja-JP", "ko-KR"],
-      "features": ["Phone quality", "Noise robust", "Enhanced accuracy"]
-    },
-    {
-      "id": "video",
-      "name": "Video Model", 
-      "description": "Optimized for video content transcription",
-      "supported_languages": ["hi-IN", "en-IN", "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN"],
-      "features": ["Video content", "Multiple speakers", "Enhanced accuracy"]
     }
   ],
   "languages": {
