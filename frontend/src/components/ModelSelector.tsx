@@ -15,6 +15,7 @@ import {
   Badge,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material'
 import {
   Search as SearchIcon,
@@ -28,9 +29,12 @@ interface Model {
   name: string
   provider_id: string
   provider_name: string
+  provider_icon_url?: string
+  provider_logo_url?: string
   description?: string
   features?: string[]
   hasApiKey: boolean
+  isActivated: boolean
   languages: string[]
 }
 
@@ -55,6 +59,70 @@ const PROVIDER_COLORS: Record<string, string> = {
   'fireworks': '#f59e0b',
   'groq': '#10b981',
   'openai': '#00a67e',
+}
+
+// Provider Icon Component
+interface ProviderIconProps {
+  provider_name: string
+  provider_icon_url?: string
+  size?: number
+}
+
+const ProviderIcon: React.FC<ProviderIconProps> = ({ provider_name, provider_icon_url, size = 32 }) => {
+  if (provider_icon_url) {
+    return (
+      <Box
+        component="img"
+        src={provider_icon_url}
+        alt={`${provider_name} icon`}
+        sx={{
+          width: size,
+          height: size,
+          borderRadius: '4px',
+          objectFit: 'contain',
+        }}
+        onError={(e) => {
+          // Fallback to initials if image fails to load
+          const target = e.target as HTMLImageElement
+          target.style.display = 'none'
+          const parent = target.parentElement
+          if (parent) {
+            parent.innerHTML = `
+              <div style="
+                width: ${size}px; 
+                height: ${size}px; 
+                background-color: ${PROVIDER_COLORS[provider_name] || '#666'}; 
+                border-radius: 4px; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                color: white; 
+                font-weight: bold; 
+                font-size: ${size * 0.4}px;
+              ">
+                ${provider_name.split(' ').map(word => word[0]).join('').substring(0, 2)}
+              </div>
+            `
+          }
+        }}
+      />
+    )
+  }
+
+  // Fallback to initials
+  return (
+    <Avatar
+      sx={{
+        width: size,
+        height: size,
+        bgcolor: PROVIDER_COLORS[provider_name] || 'grey.500',
+        fontSize: `${size * 0.4}px`,
+        fontWeight: 'bold',
+      }}
+    >
+      {provider_name.split(' ').map(word => word[0]).join('').substring(0, 2)}
+    </Avatar>
+  )
 }
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
@@ -101,7 +169,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
     fetchModels()
   }, [language])
   
-  // Filter models by search term and API key availability
+  // Filter models by search term, API key availability, and activation status
   const filteredModels = availableModels.filter(model => {
     const matchesSearch = model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          model.provider_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,8 +178,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                            feature.toLowerCase().includes(searchTerm.toLowerCase())
                          ) ?? false)
     
-    // Only show models with API keys available
-    return matchesSearch && model.hasApiKey
+    // Only show models with API keys available AND provider is activated
+    return matchesSearch && model.hasApiKey && model.isActivated
   })
   
   // Group models by provider
@@ -167,35 +235,81 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   if (filteredModels.length === 0) {
     return (
       <Alert severity="info" sx={{ borderRadius: 2 }}>
-        No models available for the selected language. Please check your API keys or select a different language.
+        No activated models available for the selected language. Please check your API keys and provider activation status, or select a different language.
       </Alert>
     )
   }
   
   return (
     <Box>
-      {/* Search */}
-      <TextField
-        fullWidth
-        placeholder="Search models, providers, features, or descriptions..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon color="action" />
-            </InputAdornment>
-          ),
-        }}
-        sx={{ mb: 2 }}
-        size="small"
-        helperText={`Showing ${filteredModels.length} model(s) for ${language || 'selected language'}`}
-      />
+      {/* Search and Action Buttons */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search models, providers, features, or descriptions..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+          }}
+          size="small"
+          helperText={`Showing ${filteredModels.length} model(s) for ${language || 'selected language'}`}
+        />
+        
+        {/* Action Buttons */}
+        {filteredModels.length > 0 && (
+          <Box sx={{ display: 'flex', gap: 1, mt: 1, justifyContent: 'flex-end' }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                const allModelIds = filteredModels.map(model => model.id)
+                onModelChange(allModelIds)
+              }}
+              disabled={selectedModels.length === filteredModels.length}
+              startIcon={<CheckCircleIcon />}
+              sx={{ 
+                textTransform: 'none',
+                borderColor: 'success.main',
+                color: 'success.main',
+                '&:hover': {
+                  borderColor: 'success.dark',
+                  backgroundColor: 'success.50',
+                }
+              }}
+            >
+              Select All Models
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => onModelChange([])}
+              disabled={selectedModels.length === 0}
+              startIcon={<ErrorIcon />}
+              sx={{ 
+                textTransform: 'none',
+                borderColor: 'error.main',
+                color: 'error.main',
+                '&:hover': {
+                  borderColor: 'error.dark',
+                  backgroundColor: 'error.50',
+                }
+              }}
+            >
+              Reset Selection
+            </Button>
+          </Box>
+        )}
+      </Box>
       
       {/* Models by Provider */}
       <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
         {Object.entries(modelsByProvider).map(([provider, models]) => {
-          const availableModelsCount = models.filter(m => m.hasApiKey).length
+          const availableModelsCount = models.filter(m => m.hasApiKey && m.isActivated).length
           const totalModelsCount = models.length
           
           return (
@@ -219,17 +333,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                   },
                 }}
               >
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    bgcolor: PROVIDER_COLORS[provider] || 'grey.500',
-                    fontSize: '0.875rem',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {provider.split(' ').map(word => word[0]).join('').substring(0, 2)}
-                </Avatar>
+                <ProviderIcon
+                  provider_name={provider}
+                  provider_icon_url={models[0]?.provider_icon_url}
+                  size={32}
+                />
                 
                 <Box sx={{ flexGrow: 1 }}>
                   <Typography variant="subtitle1" fontWeight="600">
@@ -240,22 +348,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                   </Typography>
                 </Box>
                 
-                <Badge
-                  badgeContent={models.filter(m => selectedModels.includes(m.id)).length}
-                  color="primary"
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      right: 8,
-                      top: 8,
-                    },
-                  }}
-                >
-                  <Chip
-                    label={`${models.length} models`}
-                    size="small"
-                    variant="outlined"
-                  />
-                </Badge>
+                <Chip
+                  label={`${models.length} models`}
+                  size="small"
+                  variant="outlined"
+                />
               </AccordionSummary>
               
               <AccordionDetails sx={{ pt: 0 }}>
@@ -280,17 +377,17 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                           transform: 'translateY(-1px)',
                           boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                         },
-                        opacity: model.hasApiKey ? 1 : 0.6,
+                        opacity: (model.hasApiKey && model.isActivated) ? 1 : 0.6,
                       }}
-                      onClick={() => model.hasApiKey && handleModelToggle(model.id)}
+                      onClick={() => (model.hasApiKey && model.isActivated) && handleModelToggle(model.id)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                         <FormControlLabel
                           control={
                             <Checkbox
                               checked={selectedModels.includes(model.id)}
-                              onChange={() => model.hasApiKey && handleModelToggle(model.id)}
-                              disabled={!model.hasApiKey}
+                              onChange={() => (model.hasApiKey && model.isActivated) && handleModelToggle(model.id)}
+                              disabled={!(model.hasApiKey && model.isActivated)}
                               sx={{
                                 color: PROVIDER_COLORS[provider] || 'primary.main',
                                 '&.Mui-checked': {
@@ -308,7 +405,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                             <Typography variant="subtitle2" fontWeight="600">
                               {model.name}
                             </Typography>
-                            {model.hasApiKey ? (
+                            {(model.hasApiKey && model.isActivated) ? (
                               <CheckCircleIcon color="success" sx={{ fontSize: 16 }} />
                             ) : (
                               <ErrorIcon color="error" sx={{ fontSize: 16 }} />
@@ -332,17 +429,17 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                                   sx={{
                                     height: 20,
                                     fontSize: '0.7rem',
-                                    borderColor: model.hasApiKey ? 'primary.main' : 'grey.400',
-                                    color: model.hasApiKey ? 'primary.main' : 'grey.600',
+                                    borderColor: (model.hasApiKey && model.isActivated) ? 'primary.main' : 'grey.400',
+                                    color: (model.hasApiKey && model.isActivated) ? 'primary.main' : 'grey.600',
                                   }}
                                 />
                               ))}
                             </Box>
                           )}
                           
-                          {!model.hasApiKey && (
+                          {!(model.hasApiKey && model.isActivated) && (
                             <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                              API key required
+                              {!model.hasApiKey ? 'API key required' : 'Provider not activated'}
                             </Typography>
                           )}
                         </Box>

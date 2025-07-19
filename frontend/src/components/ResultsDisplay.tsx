@@ -26,6 +26,7 @@ interface TestResult {
   modelId: string
   modelName: string
   provider: string
+  provider_icon_url?: string
   success: boolean
   transcription?: string
   processingTime?: number
@@ -41,7 +42,73 @@ const PROVIDER_COLORS: Record<string, string> = {
   'google': '#4285f4',
   'sarv': '#ff6b35',
   'elevenlabs': '#7c3aed',
-  'fireworks': '#f59e0b'
+  'fireworks': '#f59e0b',
+  'groq': '#10b981',
+  'openai': '#00a67e',
+}
+
+// Provider Icon Component for Results
+interface ProviderIconProps {
+  provider_name: string
+  provider_icon_url?: string
+  size?: number
+}
+
+const ProviderIcon: React.FC<ProviderIconProps> = ({ provider_name, provider_icon_url, size = 24 }) => {
+  if (provider_icon_url) {
+    return (
+      <Box
+        component="img"
+        src={provider_icon_url}
+        alt={`${provider_name} icon`}
+        sx={{
+          width: size,
+          height: size,
+          borderRadius: '4px',
+          objectFit: 'contain',
+        }}
+        onError={(e) => {
+          // Fallback to Avatar if image fails to load
+          const target = e.target as HTMLImageElement
+          target.style.display = 'none'
+          const parent = target.parentElement
+          if (parent) {
+            parent.innerHTML = `
+              <div style="
+                width: ${size}px; 
+                height: ${size}px; 
+                background-color: ${PROVIDER_COLORS[provider_name.toLowerCase()] || '#666'}; 
+                border-radius: 50%; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                color: white; 
+                font-weight: bold; 
+                font-size: ${size * 0.5}px;
+              ">
+                ${provider_name.substring(0, 1).toUpperCase()}
+              </div>
+            `
+          }
+        }}
+      />
+    )
+  }
+
+  // Fallback to Avatar
+  return (
+    <Avatar
+      sx={{
+        width: size,
+        height: size,
+        bgcolor: PROVIDER_COLORS[provider_name.toLowerCase()] || 'grey.500',
+        fontSize: `${size * 0.5}px`,
+        fontWeight: 'bold',
+      }}
+    >
+      {provider_name.substring(0, 1).toUpperCase()}
+    </Avatar>
+  )
 }
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
@@ -165,17 +232,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
                 
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Avatar
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        bgcolor: PROVIDER_COLORS[result.provider.toLowerCase()] || 'grey.500',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {result.provider.substring(0, 1).toUpperCase()}
-                    </Avatar>
+                    <ProviderIcon
+                      provider_name={result.provider}
+                      provider_icon_url={result.provider_icon_url}
+                      size={24}
+                    />
                     <Typography variant="body2" fontWeight="600">
                       {result.provider}
                     </Typography>

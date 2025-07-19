@@ -172,6 +172,8 @@ class ProviderManager:
                         'provider_id': provider_id,
                         'provider_name': provider_config['name'],
                         'provider_folder': provider_info['name'],
+                        'provider_icon_url': provider_config.get('icon_url', ''),
+                        'provider_logo_url': provider_config.get('logo_url', ''),
                         'model_id': model['id'],
                         'name': model['name'],
                         'description': model.get('description', ''),

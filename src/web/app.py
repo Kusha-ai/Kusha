@@ -183,10 +183,13 @@ async def get_models_for_language(language_code: str):
     try:
         models = provider_manager.get_models_for_language(language_code)
         
-        # Add API key status to each model
+        # Add API key status and activation status to each model
         for model in models:
             api_key = db.get_api_key(model['provider_id'])
+            provider_status = db.get_provider_status(model['provider_id'])
+            
             model['hasApiKey'] = not model['requires_api_key'] or bool(api_key)
+            model['isActivated'] = provider_status.get('is_activated', False) if provider_status else False
         
         return {"models": models}
     except Exception as e:
@@ -464,6 +467,17 @@ async def test_multiple_models(
             for future in concurrent.futures.as_completed(futures):
                 try:
                     result = future.result()
+                    
+                    # Add provider icon URL to the result
+                    provider_id = result.get('provider_id', result.get('provider', ''))
+                    if provider_id:
+                        # Find the model info to get provider icon
+                        for model in selected_models:
+                            if model.get('provider_id') == provider_id:
+                                result['provider_icon_url'] = model.get('icon_url', '')
+                                result['provider_logo_url'] = model.get('logo_url', '')
+                                break
+                    
                     results.append(result)
                     
                     # Save successful results to database
@@ -752,6 +766,8 @@ async def get_api_keys(admin_user: dict = Depends(get_current_admin)):
                 "provider_id": provider_id,
                 "provider_name": provider['name'],
                 "provider_type": provider.get('provider_type', 'ASR'),  # Include provider type
+                "provider_icon_url": provider.get('icon_url', ''),  # Include provider icon
+                "provider_logo_url": provider.get('logo_url', ''),  # Include provider logo
                 "requires_api_key": provider['requires_api_key'],
                 "api_key_type": provider['api_key_type'],
                 "has_api_key": bool(api_key),
@@ -887,6 +903,49 @@ async def deactivate_provider(
             }
         else:
             return {"success": False, "error": "Failed to deactivate provider"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/admin/api-keys/{provider_id}/reactivate")
+async def reactivate_provider(
+    provider_id: str,
+    admin_user: dict = Depends(get_current_admin)
+):
+    """Reactivate a specific provider"""
+    try:
+        # Get provider config to verify it exists
+        provider_config = provider_manager.get_provider_config(provider_id)
+        if not provider_config:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        
+        # Check if provider requires API key
+        requires_api_key = provider_config['provider'].get('requires_api_key', True)
+        if requires_api_key:
+            # Check if API key exists
+            api_key = db.get_api_key(provider_id)
+            if not api_key:
+                return {"success": False, "error": "API key required but not configured"}
+        
+        # Reactivate the provider
+        success = db.update_provider_status(
+            provider_id=provider_id,
+            is_activated=True,
+            test_result="manual_reactivation",
+            transcription="Provider manually reactivated by admin",
+            model_used="manual_reactivation",
+            language_used="n/a",
+            processing_time=0.0
+        )
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"Provider {provider_config['provider']['name']} reactivated successfully"
+            }
+        else:
+            return {"success": False, "error": "Failed to reactivate provider"}
     except HTTPException:
         raise
     except Exception as e:

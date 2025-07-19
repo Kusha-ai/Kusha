@@ -45,6 +45,9 @@ import {
   VoiceChat as TTSIcon,
   Psychology as AIIcon,
   Hub as EmbeddingIcon,
+  PowerOff,
+  ToggleOff,
+  ToggleOn,
 } from '@mui/icons-material'
 
 interface ApiKeyData {
@@ -61,6 +64,8 @@ interface ApiKeyData {
   test_model_used?: string
   test_language_used?: string
   test_processing_time?: number
+  provider_icon_url?: string
+  provider_logo_url?: string
 }
 
 interface ApiKeyManagerProps {
@@ -292,6 +297,29 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
     }
   }
 
+  const handleReactivateProvider = async (providerId: string) => {
+    if (!confirm('Are you sure you want to reactivate this provider?')) return
+    
+    try {
+      const response = await fetch(`/api/admin/api-keys/${providerId}/reactivate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setError(`✅ ${data.message}`)
+        fetchApiKeys() // Refresh to show updated activation status
+      } else {
+        setError(data.error || 'Failed to reactivate provider')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reactivate provider')
+    }
+  }
+
   const openEditDialog = (provider: ApiKeyData) => {
     setEditDialog({
       open: true,
@@ -324,6 +352,58 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
       case 'Embedding':
         return <EmbeddingIcon />
     }
+  }
+
+  // Provider Icon Component for API Key Management
+  interface ProviderIconProps {
+    provider_name: string
+    provider_icon_url?: string
+    size?: number
+  }
+
+  const ProviderIcon: React.FC<ProviderIconProps> = ({ provider_name, provider_icon_url, size = 20 }) => {
+    if (provider_icon_url) {
+      return (
+        <Box
+          component="img"
+          src={provider_icon_url}
+          alt={`${provider_name} icon`}
+          sx={{
+            width: size,
+            height: size,
+            borderRadius: '4px',
+            objectFit: 'contain',
+          }}
+          onError={(e) => {
+            // Fallback to text if image fails to load
+            const target = e.target as HTMLImageElement
+            target.style.display = 'none'
+            const parent = target.parentElement
+            if (parent) {
+              parent.innerHTML = `
+                <div style="
+                  width: ${size}px; 
+                  height: ${size}px; 
+                  background-color: #1976d2; 
+                  border-radius: 4px; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center; 
+                  color: white; 
+                  font-weight: bold; 
+                  font-size: ${size * 0.6}px;
+                ">
+                  ${provider_name.substring(0, 1).toUpperCase()}
+                </div>
+              `
+            }
+          }}
+        />
+      )
+    }
+
+    // Fallback - no icon
+    return null
   }
 
   const filteredApiKeys = apiKeys.filter(provider => provider.provider_type === selectedAiType)
@@ -476,6 +556,11 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
               <TableRow key={provider.provider_id} hover>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ProviderIcon
+                      provider_name={provider.provider_name}
+                      provider_icon_url={provider.provider_icon_url}
+                      size={20}
+                    />
                     <Typography variant="body2" fontWeight="600">
                       {provider.provider_name}
                     </Typography>
@@ -539,21 +624,49 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
                 </TableCell>
                 
                 <TableCell>
-                  {provider.is_activated ? (
-                    <Chip
-                      label="Activated"
-                      size="small"
-                      color="success"
-                      icon={<Check />}
-                    />
-                  ) : (
-                    <Chip
-                      label="Not Activated"
-                      size="small"
-                      color="default"
-                      icon={<Warning />}
-                    />
-                  )}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    {provider.is_activated ? (
+                      <Chip
+                        label="Activated"
+                        size="small"
+                        color="success"
+                        icon={<Check />}
+                      />
+                    ) : (
+                      <Chip
+                        label="Not Activated"
+                        size="small"
+                        color="default"
+                        icon={<Warning />}
+                      />
+                    )}
+                    
+                    {/* Deactivate/Reactivate buttons */}
+                    {provider.is_activated ? (
+                      <Tooltip title="Deactivate Provider">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeactivateProvider(provider.provider_id)}
+                          color="warning"
+                          sx={{ ml: 1 }}
+                        >
+                          <PowerOff />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="Reactivate Provider">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleReactivateProvider(provider.provider_id)}
+                          color="success"
+                          sx={{ ml: 1 }}
+                        >
+                          <ToggleOn />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                  
                   {provider.last_test_date && (
                     <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}>
                       Last tested: {new Date(provider.last_test_date).toLocaleDateString()}
@@ -651,7 +764,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
                       </>
                     )}
                     
-                    {/* Dashboard and Deactivate buttons for all providers */}
+                    {/* Dashboard button for all providers */}
                     <Tooltip title="View Provider Dashboard">
                       <IconButton
                         size="small"
@@ -661,18 +774,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
                         <Visibility />
                       </IconButton>
                     </Tooltip>
-                    
-                    {provider.is_activated && (
-                      <Tooltip title="Deactivate Provider">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeactivateProvider(provider.provider_id)}
-                          color="error"
-                        >
-                          <Close />
-                        </IconButton>
-                      </Tooltip>
-                    )}
                   </Box>
                   
                   {/* Test Results */}
