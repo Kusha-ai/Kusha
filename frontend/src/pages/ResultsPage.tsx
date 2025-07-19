@@ -667,6 +667,19 @@ const ResultsPage: React.FC = () => {
                               Best Time
                             </Typography>
                           </Box>
+                          
+                          {/* Speed comparison line */}
+                          <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                            {index === 0 ? (
+                              <Typography variant="caption" color="success.main" fontWeight="600" textAlign="center" display="block">
+                                🏆 Fastest Provider
+                              </Typography>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary" textAlign="center" display="block">
+                                {((provider.avgTime - leaderboard[0].avgTime) / leaderboard[0].avgTime * 100).toFixed(0)}% slower than #1
+                              </Typography>
+                            )}
+                          </Box>
                         </CardContent>
                       </Card>
                     </Grid>
