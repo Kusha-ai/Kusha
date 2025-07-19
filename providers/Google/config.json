@@ -5,7 +5,9 @@
     "description": "Google's cloud-based speech recognition service",
     "base_url": "https://speech.googleapis.com/v1",
     "requires_api_key": true,
-    "api_key_type": "string"
+    "api_key_type": "string",
+    "icon_url": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg",
+    "logo_url": "https://cloud.google.com/_static/cloud/images/social-icon-google-cloud-1200-630.png"
   },
   "models": [
     {

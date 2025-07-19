@@ -55,6 +55,8 @@ interface TestResult {
 interface Provider {
   id: string
   name: string
+  icon_url?: string
+  logo_url?: string
 }
 
 interface Language {
@@ -163,6 +165,16 @@ const ResultsPage: React.FC = () => {
   const getProviderName = (providerId: string) => {
     const provider = providers.find(p => p.id === providerId)
     return provider?.name || providerId
+  }
+
+  const getProviderIcon = (providerName: string) => {
+    // First try to find by name (for results data)
+    let provider = providers.find(p => p.name.toLowerCase() === providerName.toLowerCase())
+    // Fallback to ID matching (for other cases)
+    if (!provider) {
+      provider = providers.find(p => p.id.toLowerCase() === providerName.toLowerCase())
+    }
+    return provider?.icon_url || null
   }
 
   const filteredResults = results.filter(result => {
@@ -557,7 +569,7 @@ const ResultsPage: React.FC = () => {
                 </Typography>
                 
                 <Grid container spacing={2}>
-                  {leaderboard.map((provider, index) => (
+                  {leaderboard.slice(0, 3).map((provider, index) => (
                     <Grid item xs={12} sm={6} md={4} key={provider.provider}>
                       <Card 
                         sx={{ 
@@ -573,12 +585,36 @@ const ResultsPage: React.FC = () => {
                             <Typography variant="h4" component="span">
                               {getMedalEmoji(index)}
                             </Typography>
+                            {getProviderIcon(provider.provider) ? (
+                              <Box
+                                component="img"
+                                src={getProviderIcon(provider.provider)}
+                                alt={provider.provider}
+                                sx={{ 
+                                  width: 32, 
+                                  height: 32,
+                                  borderRadius: '50%',
+                                  objectFit: 'contain',
+                                  backgroundColor: 'background.paper',
+                                  p: 0.5
+                                }}
+                                onError={(e) => {
+                                  // Fallback to avatar with first character if icon fails to load
+                                  const target = e.target as HTMLElement
+                                  target.style.display = 'none'
+                                  const avatar = target.parentElement?.querySelector('.fallback-avatar') as HTMLElement
+                                  if (avatar) avatar.style.display = 'flex'
+                                }}
+                              />
+                            ) : null}
                             <Avatar
+                              className="fallback-avatar"
                               sx={{ 
                                 bgcolor: provider.color, 
                                 width: 32, 
                                 height: 32,
-                                fontSize: '0.875rem'
+                                fontSize: '0.875rem',
+                                display: getProviderIcon(provider.provider) ? 'none' : 'flex'
                               }}
                             >
                               {provider.provider.charAt(0)}
@@ -721,13 +757,37 @@ const ResultsPage: React.FC = () => {
                       <TableRow key={result.id} hover>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            {getProviderIcon(result.provider) ? (
+                              <Box
+                                component="img"
+                                src={getProviderIcon(result.provider)}
+                                alt={result.provider}
+                                sx={{ 
+                                  width: 24, 
+                                  height: 24,
+                                  borderRadius: '50%',
+                                  objectFit: 'contain',
+                                  backgroundColor: 'background.paper',
+                                  p: 0.25
+                                }}
+                                onError={(e) => {
+                                  // Fallback to avatar with first character if icon fails to load
+                                  const target = e.target as HTMLElement
+                                  target.style.display = 'none'
+                                  const avatar = target.parentElement?.querySelector('.table-fallback-avatar') as HTMLElement
+                                  if (avatar) avatar.style.display = 'flex'
+                                }}
+                              />
+                            ) : null}
                             <Avatar
+                              className="table-fallback-avatar"
                               sx={{
                                 width: 24,
                                 height: 24,
                                 bgcolor: getProviderColor(result.provider),
                                 fontSize: '0.75rem',
                                 fontWeight: 'bold',
+                                display: getProviderIcon(result.provider) ? 'none' : 'flex'
                               }}
                             >
                               {getProviderName(result.provider).substring(0, 1).toUpperCase()}

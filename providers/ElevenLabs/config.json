@@ -5,7 +5,9 @@
     "description": "ElevenLabs speech-to-text service",
     "base_url": "https://api.elevenlabs.io/v1",
     "requires_api_key": true,
-    "api_key_type": "string"
+    "api_key_type": "string",
+    "icon_url": "https://elevenlabs.io/favicon.ico",
+    "logo_url": "https://elevenlabs.io/logo.svg"
   },
   "models": [
     {

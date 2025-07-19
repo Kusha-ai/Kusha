@@ -5,7 +5,9 @@
     "description": "Official OpenAI Whisper API with latest models",
     "base_url": "https://api.openai.com/v1",
     "requires_api_key": true,
-    "api_key_type": "string"
+    "api_key_type": "string",
+    "icon_url": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/openai/openai-original.svg",
+    "logo_url": "https://openai.com/favicon.ico"
   },
   "models": [
     {

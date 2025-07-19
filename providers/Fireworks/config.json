@@ -5,7 +5,9 @@
     "description": "Fast AI inference platform with Whisper models",
     "base_url": "https://api.fireworks.ai/inference/v1",
     "requires_api_key": true,
-    "api_key_type": "string"
+    "api_key_type": "string",
+    "icon_url": "https://app.fireworks.ai/favicon.ico",
+    "logo_url": "https://fireworks.ai/_next/static/media/logo.b72d2c02.svg"
   },
   "models": [
     {

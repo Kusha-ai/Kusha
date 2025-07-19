@@ -5,7 +5,9 @@
     "description": "Ultra-fast inference platform with Whisper models",
     "base_url": "https://api.groq.com/openai/v1",
     "requires_api_key": true,
-    "api_key_type": "string"
+    "api_key_type": "string",
+    "icon_url": "https://groq.com/wp-content/uploads/2024/03/PBG-mark1-color.svg",
+    "logo_url": "https://groq.com/wp-content/uploads/2024/03/groq-logo-color.svg"
   },
   "models": [
     {

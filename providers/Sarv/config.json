@@ -5,7 +5,9 @@
     "description": "Indian language ASR service with dual model support - Hindi-specific model for Hindi, multilingual model for other 22 Indian languages",
     "base_url": "http://103.255.103.118:5001",
     "requires_api_key": false,
-    "api_key_type": "none"
+    "api_key_type": "none",
+    "icon_url": "https://cdn.jsdelivr.net/gh/twemoji/twemoji@14.0.2/assets/svg/1f1ee-1f1f3.svg",
+    "logo_url": "https://www.sarv.com/images/sarv-logo.png"
   },
   "models": [
     {
