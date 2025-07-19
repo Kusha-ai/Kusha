@@ -17,6 +17,10 @@ import {
   Settings as SettingsIcon,
   Analytics as AnalyticsIcon,
   Menu as MenuIcon,
+  VoiceChat as TTSIcon,
+  Psychology as AIIcon,
+  Hub as EmbeddingIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -31,6 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
+  const [testMenuAnchorEl, setTestMenuAnchorEl] = React.useState<null | HTMLElement>(null)
   
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -40,8 +45,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setAnchorEl(null)
   }
   
+  const handleTestMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setTestMenuAnchorEl(event.currentTarget)
+  }
+  
+  const handleTestMenuClose = () => {
+    setTestMenuAnchorEl(null)
+  }
+  
+  const testSubMenuItems = [
+    { label: 'ASR', path: '/test/asr', icon: <MicIcon /> },
+    { label: 'TTS', path: '/test/tts', icon: <TTSIcon /> },
+    { label: 'AI', path: '/test/ai', icon: <AIIcon /> },
+    { label: 'Embedding', path: '/test/embedding', icon: <EmbeddingIcon /> },
+  ]
+
   const menuItems = [
-    { label: 'ASR Testing', path: '/', icon: <MicIcon /> },
+    { label: 'Test', path: '/test', icon: <MicIcon />, hasSubmenu: true },
     { label: 'Results', path: '/results', icon: <AnalyticsIcon /> },
     { label: 'Admin', path: '/admin', icon: <SettingsIcon /> },
   ]
@@ -49,6 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleNavigation = (path: string) => {
     navigate(path)
     handleMenuClose()
+    handleTestMenuClose()
   }
   
   return (
@@ -80,7 +101,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               }}
               onClick={() => navigate('/')}
             >
-              ASR Speed Test
+              Kusha
             </Typography>
           </Box>
           
@@ -118,22 +139,64 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           ) : (
             <Box sx={{ display: 'flex', gap: 1 }}>
               {menuItems.map((item) => (
-                <Button
-                  key={item.path}
-                  onClick={() => handleNavigation(item.path)}
-                  startIcon={item.icon}
-                  variant={location.pathname === item.path ? 'contained' : 'text'}
-                  sx={{
-                    color: location.pathname === item.path ? 'white' : 'primary.main',
-                    '&:hover': {
-                      backgroundColor: location.pathname === item.path 
-                        ? 'primary.dark' 
-                        : 'rgba(102, 126, 234, 0.1)',
-                    },
-                  }}
-                >
-                  {item.label}
-                </Button>
+                item.hasSubmenu ? (
+                  <Box key={item.path}>
+                    <Button
+                      onClick={(e) => handleTestMenuOpen(e)}
+                      startIcon={item.icon}
+                      endIcon={<ExpandMoreIcon />}
+                      variant={location.pathname.startsWith('/test') ? 'contained' : 'text'}
+                      sx={{
+                        color: location.pathname.startsWith('/test') ? 'white' : 'primary.main',
+                        '&:hover': {
+                          backgroundColor: location.pathname.startsWith('/test') 
+                            ? 'primary.dark' 
+                            : 'rgba(102, 126, 234, 0.1)',
+                        },
+                      }}
+                    >
+                      {item.label}
+                    </Button>
+                    <Menu
+                      anchorEl={testMenuAnchorEl}
+                      open={Boolean(testMenuAnchorEl)}
+                      onClose={handleTestMenuClose}
+                      transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+                      anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+                    >
+                      {testSubMenuItems.map((subItem) => (
+                        <MenuItem
+                          key={subItem.path}
+                          onClick={() => handleNavigation(subItem.path)}
+                          selected={location.pathname === subItem.path}
+                          sx={{ minWidth: 120 }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {subItem.icon}
+                            {subItem.label}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </Box>
+                ) : (
+                  <Button
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    startIcon={item.icon}
+                    variant={location.pathname === item.path ? 'contained' : 'text'}
+                    sx={{
+                      color: location.pathname === item.path ? 'white' : 'primary.main',
+                      '&:hover': {
+                        backgroundColor: location.pathname === item.path 
+                          ? 'primary.dark' 
+                          : 'rgba(102, 126, 234, 0.1)',
+                      },
+                    }}
+                  >
+                    {item.label}
+                  </Button>
+                )
               ))}
             </Box>
           )}
@@ -166,10 +229,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
       >
         <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-          © 2025 ASR Speed Test Platform
+          © 2025 Kusha - App & Elastic Components
         </Typography>
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
-          Modern speech recognition testing with 6 providers • 60+ languages • Real-time comparison
+          Comprehensive AI platform • App & Elastic • ASR • TTS • AI Models • Embeddings
         </Typography>
       </Box>
     </Box>

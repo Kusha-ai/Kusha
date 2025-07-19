@@ -751,6 +751,7 @@ async def get_api_keys(admin_user: dict = Depends(get_current_admin)):
             result.append({
                 "provider_id": provider_id,
                 "provider_name": provider['name'],
+                "provider_type": provider.get('provider_type', 'ASR'),  # Include provider type
                 "requires_api_key": provider['requires_api_key'],
                 "api_key_type": provider['api_key_type'],
                 "has_api_key": bool(api_key),

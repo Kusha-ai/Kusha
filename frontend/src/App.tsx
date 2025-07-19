@@ -27,6 +27,10 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/test/asr" element={<HomePage />} />
+          <Route path="/test/tts" element={<HomePage />} />
+          <Route path="/test/ai" element={<HomePage />} />
+          <Route path="/test/embedding" element={<HomePage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/admin/provider/:providerId" element={<ProviderDashboard />} />
           <Route path="/results" element={<ResultsPage />} />

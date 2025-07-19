@@ -40,19 +40,31 @@ class ProviderManager:
             self.language_pack = {}
     
     def _load_providers(self):
-        """Load all providers from the providers directory"""
+        """Load all providers from the providers directory with nested structure support"""
         self.providers = {}
         
         if not self.providers_dir.exists():
             print(f"Providers directory not found: {self.providers_dir}")
             return
         
-        # Scan each subdirectory in providers folder
+        # Scan for both old flat structure and new nested structure
+        ai_types = ['ASR', 'TTS', 'AI', 'Embedding']
+        
+        # First, try to load from nested structure (providers/ASR/, providers/TTS/, etc.)
+        for ai_type in ai_types:
+            ai_type_dir = self.providers_dir / ai_type
+            if ai_type_dir.exists() and ai_type_dir.is_dir():
+                print(f"Loading {ai_type} providers from {ai_type_dir}")
+                for provider_path in ai_type_dir.iterdir():
+                    if provider_path.is_dir():
+                        self._load_provider(provider_path, ai_type)
+        
+        # Fallback: scan root providers directory for backwards compatibility
         for provider_path in self.providers_dir.iterdir():
-            if provider_path.is_dir():
-                self._load_provider(provider_path)
+            if provider_path.is_dir() and provider_path.name not in ai_types:
+                self._load_provider(provider_path, 'ASR')  # Default to ASR for legacy providers
     
-    def _load_provider(self, provider_path: Path):
+    def _load_provider(self, provider_path: Path, ai_type: str = 'ASR'):
         """Load a single provider from its directory"""
         provider_name = provider_path.name
         config_file = provider_path / 'config.json'
@@ -84,15 +96,20 @@ class ProviderManager:
             if not impl_file:
                 impl_file = python_files[0]  # Use first Python file as fallback
             
+            # Add provider_type to config if not present
+            if 'provider_type' not in config['provider']:
+                config['provider']['provider_type'] = ai_type
+            
             # Store provider info
             self.providers[provider_id] = {
                 'config': config,
                 'path': provider_path,
                 'impl_file': impl_file,
-                'name': provider_name
+                'name': provider_name,
+                'ai_type': ai_type
             }
             
-            print(f"Loaded provider: {provider_name} ({provider_id})")
+            print(f"Loaded {ai_type} provider: {provider_name} ({provider_id})")
             
         except Exception as e:
             print(f"Error loading provider {provider_name}: {e}")
@@ -214,6 +231,7 @@ class ProviderManager:
             config = provider_info['config']['provider'].copy()
             config['id'] = provider_id
             config['folder_name'] = provider_info['name']
+            config['provider_type'] = provider_info.get('ai_type', 'ASR')  # Include AI type
             providers_list.append(config)
         return providers_list
     

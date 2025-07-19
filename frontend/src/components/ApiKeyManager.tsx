@@ -25,6 +25,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Tabs,
+  Tab,
 } from '@mui/material'
 import {
   VpnKey,
@@ -40,11 +42,15 @@ import {
   Mic,
   Close,
   Visibility,
+  VoiceChat as TTSIcon,
+  Psychology as AIIcon,
+  Hub as EmbeddingIcon,
 } from '@mui/icons-material'
 
 interface ApiKeyData {
   provider_id: string
   provider_name: string
+  provider_type: 'ASR' | 'TTS' | 'AI' | 'Embedding'
   requires_api_key: boolean
   api_key_type: string
   has_api_key: boolean
@@ -65,6 +71,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
   const [apiKeys, setApiKeys] = useState<ApiKeyData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedAiType, setSelectedAiType] = useState<'ASR' | 'TTS' | 'AI' | 'Embedding'>('ASR')
   const [editDialog, setEditDialog] = useState<{
     open: boolean
     provider?: ApiKeyData
@@ -306,6 +313,21 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
     }
   }
 
+  const getAiTypeIcon = (type: 'ASR' | 'TTS' | 'AI' | 'Embedding') => {
+    switch (type) {
+      case 'ASR':
+        return <Mic />
+      case 'TTS':
+        return <TTSIcon />
+      case 'AI':
+        return <AIIcon />
+      case 'Embedding':
+        return <EmbeddingIcon />
+    }
+  }
+
+  const filteredApiKeys = apiKeys.filter(provider => provider.provider_type === selectedAiType)
+
   useEffect(() => {
     fetchApiKeys()
   }, [])
@@ -376,6 +398,57 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
         </Alert>
       )}
 
+      {/* AI Type Tabs */}
+      <Box sx={{ 
+        mb: 3,
+        p: 2,
+        borderRadius: 3,
+        background: 'rgba(255, 255, 255, 0.98)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+      }}>
+        <Tabs 
+          value={selectedAiType} 
+          onChange={(_, newValue) => setSelectedAiType(newValue)}
+          sx={{ 
+            '& .MuiTab-root': { 
+              minWidth: 'auto',
+              fontWeight: 600,
+            }
+          }}
+        >
+          <Tab 
+            icon={<Mic />} 
+            iconPosition="start"
+            label="ASR" 
+            value="ASR" 
+            sx={{ textTransform: 'none' }}
+          />
+          <Tab 
+            icon={<TTSIcon />} 
+            iconPosition="start"
+            label="TTS" 
+            value="TTS" 
+            sx={{ textTransform: 'none' }}
+          />
+          <Tab 
+            icon={<AIIcon />} 
+            iconPosition="start"
+            label="AI Models" 
+            value="AI" 
+            sx={{ textTransform: 'none' }}
+          />
+          <Tab 
+            icon={<EmbeddingIcon />} 
+            iconPosition="start"
+            label="Embedding" 
+            value="Embedding" 
+            sx={{ textTransform: 'none' }}
+          />
+        </Tabs>
+      </Box>
+
       <TableContainer 
         component={Paper} 
         sx={{ 
@@ -390,7 +463,8 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
           <TableHead>
             <TableRow>
               <TableCell>Provider</TableCell>
-              <TableCell>Type</TableCell>
+              <TableCell>AI Type</TableCell>
+              <TableCell>Key Type</TableCell>
               <TableCell>API Key Status</TableCell>
               <TableCell>Activation Status</TableCell>
               <TableCell>API Key</TableCell>
@@ -398,7 +472,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {apiKeys.map((provider) => (
+            {filteredApiKeys.map((provider) => (
               <TableRow key={provider.provider_id} hover>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -414,6 +488,16 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
                       />
                     )}
                   </Box>
+                </TableCell>
+                
+                <TableCell>
+                  <Chip
+                    icon={getAiTypeIcon(provider.provider_type)}
+                    label={provider.provider_type}
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                  />
                 </TableCell>
                 
                 <TableCell>

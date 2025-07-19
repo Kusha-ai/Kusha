@@ -1,0 +1,35 @@
+{
+  "provider": {
+    "id": "groq-ai",
+    "name": "Groq AI",
+    "description": "Ultra-fast AI inference with LLaMA and Mixtral models",
+    "base_url": "https://api.groq.com/openai/v1",
+    "requires_api_key": true,
+    "api_key_type": "bearer",
+    "icon_url": "https://groq.com/wp-content/uploads/2024/03/groq-logo.svg",
+    "logo_url": "https://groq.com/wp-content/uploads/2024/03/groq-logo.svg"
+  },
+  "models": [
+    {
+      "id": "llama3-70b-8192",
+      "name": "LLaMA 3 70B",
+      "description": "Meta's LLaMA 3 70B model with 8192 token context",
+      "supported_languages": ["en"],
+      "features": ["Fast", "70B parameters", "8K context"]
+    },
+    {
+      "id": "mixtral-8x7b-32768",
+      "name": "Mixtral 8x7B",
+      "description": "Mistral's Mixtral 8x7B with 32K context window",
+      "supported_languages": ["en", "fr", "de", "es", "it"],
+      "features": ["Ultra-fast", "32K context", "Multilingual"]
+    }
+  ],
+  "languages": {
+    "en": {
+      "name": "English",
+      "flag": "🇬🇧",
+      "region": "Global"
+    }
+  }
+}

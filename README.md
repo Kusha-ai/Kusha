@@ -1,14 +1,15 @@
-# ASR Speed Test Platform
+# Kusha - AI Platform
 
-A comprehensive Automatic Speech Recognition (ASR) speed testing platform that allows you to compare multiple ASR providers simultaneously. Built with a modular architecture for easy provider addition and a modern React frontend.
+Kusha is a comprehensive AI platform with two main components: **App** and **Elastic**. The Elastic component provides AI testing capabilities that allow you to compare multiple AI providers simultaneously across ASR, TTS, AI Models, and Embeddings. Built with a modular architecture for easy provider addition and a modern React frontend.
 
 ## 🚀 Features
 
-- **Multiple ASR Providers**: Support for Google Cloud Speech-to-Text, ElevenLabs, Fireworks AI, and Sarv ASR
+- **Multiple AI Types**: Support for ASR, TTS, AI Models, and Embeddings
+- **Multiple Providers**: Google Cloud, ElevenLabs, Fireworks AI, Sarv ASR, Groq, and more
 - **22+ Indian Languages**: Comprehensive support for Indian regional languages
 - **Simultaneous Testing**: Test multiple providers/models in parallel for speed comparison
-- **Modern UI**: Material-UI based React frontend with country flags and intuitive workflow
-- **Modular Architecture**: Easy addition of new ASR providers without code changes
+- **Modern UI**: Material-UI based React frontend with tabbed interface and intuitive workflow
+- **Kusha Elastic**: Elastic component for scalable AI provider management
 - **Language-First Workflow**: Select language first, then see compatible models
 - **Real-time Audio Recording**: Browser-based audio recording with WebRTC
 - **File Upload Support**: Support for WAV, MP3, WEBM, FLAC audio formats
@@ -16,21 +17,27 @@ A comprehensive Automatic Speech Recognition (ASR) speed testing platform that a
 
 ## 🏗️ Architecture
 
-### Provider Structure
+### Kusha Elastic - Provider Structure
 ```
 providers/
-├── Sarv/
-│   ├── config.json       # Provider configuration & supported languages
-│   └── sarv_asr.py       # ASR implementation
-├── Google/
-│   ├── config.json
-│   └── google_asr.py
-├── ElevenLabs/
-│   ├── config.json
-│   └── elevenlabs_asr.py
-└── Fireworks/
-    ├── config.json
-    └── fireworks_asr.py
+├── ASR/
+│   ├── Sarv/
+│   │   ├── config.json       # Provider configuration & supported languages
+│   │   └── sarv_asr.py       # ASR implementation
+│   ├── Google/
+│   ├── ElevenLabs/
+│   └── OpenAI/
+├── TTS/
+│   ├── Google/
+│   ├── OpenAI/
+│   └── ElevenLabs/
+├── AI/
+│   ├── Groq/
+│   ├── OpenAI/
+│   └── Anthropic/
+└── Embedding/
+    ├── OpenAI/
+    └── Cohere/
 ```
 
 ### Backend

@@ -1,7 +1,7 @@
 {
-  "name": "asr-speedtest-frontend",
+  "name": "kusha-frontend",
   "version": "1.0.0",
-  "description": "Modern React frontend for ASR Speed Test",
+  "description": "Modern React frontend for Kusha AI Platform",
   "private": true,
   "dependencies": {
     "@mui/material": "^5.15.0",

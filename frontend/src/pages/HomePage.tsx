@@ -85,7 +85,7 @@ const HomePage: React.FC = () => {
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
           }}
         >
-          ASR Speed Test Platform
+          Kusha Platform
         </Typography>
         <Typography
           variant="h6"
@@ -238,7 +238,7 @@ const HomePage: React.FC = () => {
               </Box>
               
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Choose one or more ASR models to test
+                Choose one or more AI models to test
               </Typography>
               
               <ModelSelector

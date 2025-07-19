@@ -3,10 +3,10 @@ version: '3.8'
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: asr-elasticsearch
+    container_name: kusha-elasticsearch
     environment:
-      - node.name=asr-elasticsearch
-      - cluster.name=asr-cluster
+      - node.name=kusha-elasticsearch
+      - cluster.name=kusha-elastic-cluster
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -24,7 +24,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     networks:
-      - asr-network
+      - kusha-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
@@ -33,23 +33,23 @@ services:
       retries: 5
       start_period: 60s
 
-  asr-speedtest:
+  kusha-app:
     build: .
     ports:
       - "5005:5005"
     environment:
       - SERVER_HOST=0.0.0.0
       - SERVER_PORT=5005
-      - ADMIN_TOKEN=asr-admin-token-2025
+      - ADMIN_TOKEN=kusha-admin-token-2025
       - SARV_ASR_URL=http://103.255.103.118:5001
-      - DATABASE_URL=sqlite:////app/database/asr_config.db
+      - DATABASE_URL=sqlite:////app/database/kusha_config.db
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - DEBUG=False
       - ENVIRONMENT=production
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-      - asr-database:/app/database
+      - kusha-database:/app/database
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5005/api/providers"]
@@ -58,19 +58,19 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - asr-network
+      - kusha-network
     depends_on:
       elasticsearch:
         condition: service_healthy
 
 networks:
-  asr-network:
+  kusha-network:
     driver: bridge
 
 volumes:
-  asr-data:
+  kusha-data:
     driver: local
-  asr-database:
+  kusha-database:
     driver: local
   elasticsearch-data:
     driver: local

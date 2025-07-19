@@ -1,0 +1,35 @@
+{
+  "provider": {
+    "id": "google-tts",
+    "name": "Google Text-to-Speech",
+    "description": "Google Cloud Text-to-Speech API with neural voices and SSML support",
+    "base_url": "https://texttospeech.googleapis.com/v1",
+    "requires_api_key": true,
+    "api_key_type": "google_cloud",
+    "icon_url": "https://www.gstatic.com/cloud/images/favicons/onecloud/super_cloud.png",
+    "logo_url": "https://cloud.google.com/images/social-icon-google-cloud-1200-630.png"
+  },
+  "models": [
+    {
+      "id": "neural2-en-us-journey-d",
+      "name": "Journey Voice (Neural2)",
+      "description": "High-quality neural voice optimized for conversations",
+      "supported_languages": ["en-US"],
+      "features": ["Neural", "Conversational", "High-quality"]
+    },
+    {
+      "id": "standard-en-us-wavenet-d",
+      "name": "WaveNet Standard",
+      "description": "Standard WaveNet voice with good quality",
+      "supported_languages": ["en-US"],
+      "features": ["WaveNet", "Standard", "Cost-effective"]
+    }
+  ],
+  "languages": {
+    "en-US": {
+      "name": "English (US)",
+      "flag": "🇺🇸",
+      "region": "United States"
+    }
+  }
+}
