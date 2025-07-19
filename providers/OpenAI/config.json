@@ -6,7 +6,7 @@
     "base_url": "https://api.openai.com/v1",
     "requires_api_key": true,
     "api_key_type": "string",
-    "icon_url": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/openai/openai-original.svg",
+    "icon_url": "https://openai.com/favicon.ico",
     "logo_url": "https://openai.com/favicon.ico"
   },
   "models": [
