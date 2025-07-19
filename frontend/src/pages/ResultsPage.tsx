@@ -222,7 +222,7 @@ const ResultsPage: React.FC = () => {
     page * rowsPerPage + rowsPerPage
   )
 
-  // Calculate leaderboard data
+  // Calculate leaderboard data with percentile ranking
   const leaderboard = React.useMemo(() => {
     const providerStats = new Map()
     
@@ -255,7 +255,15 @@ const ResultsPage: React.FC = () => {
     }))
     
     // Sort by average processing time (fastest first)
-    return leaderboardArray.sort((a, b) => a.avgTime - b.avgTime)
+    const sortedArray = leaderboardArray.sort((a, b) => a.avgTime - b.avgTime)
+    
+    // Calculate percentile rankings (fastest provider = 100th percentile)
+    const arrayWithPercentiles = sortedArray.map((provider, index) => ({
+      ...provider,
+      percentile: Math.round(((sortedArray.length - index) / sortedArray.length) * 100)
+    }))
+    
+    return arrayWithPercentiles
   }, [filteredResults])
 
   const getMedalEmoji = (rank: number) => {
@@ -640,10 +648,10 @@ const ResultsPage: React.FC = () => {
                             </Box>
                             <Box sx={{ textAlign: 'right' }}>
                               <Typography variant="body2" color="text.secondary">
-                                Avg Confidence
+                                Percentile
                               </Typography>
                               <Typography variant="body1" fontWeight="600">
-                                {provider.avgConfidence.toFixed(1)}%
+                                {provider.percentile}th
                               </Typography>
                             </Box>
                           </Box>
