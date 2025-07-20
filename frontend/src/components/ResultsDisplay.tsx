@@ -276,18 +276,28 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
                 </TableCell>
                 
                 <TableCell align="center">
-                  {result.processingTime ? (
-                    <Chip
-                      label={formatProcessingTime(result.processingTime)}
-                      size="small"
-                      color={result === fastestResult ? 'success' : 'default'}
-                      variant={result === fastestResult ? 'filled' : 'outlined'}
-                    />
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      -
-                    </Typography>
-                  )}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    {result.processingTime ? (
+                      <>
+                        <Chip
+                          label={formatProcessingTime(result.processingTime)}
+                          size="small"
+                          color={result === fastestResult ? 'success' : 'default'}
+                          variant={result === fastestResult ? 'filled' : 'outlined'}
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
+                          {result.provider}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', fontWeight: 'bold' }}>
+                          {result.modelName}
+                        </Typography>
+                      </>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        -
+                      </Typography>
+                    )}
+                  </Box>
                 </TableCell>
                 
                 <TableCell align="center">
@@ -310,17 +320,103 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
         </Table>
       </TableContainer>
       
-      {/* Summary */}
-      {results.length > 1 && (
+      {/* Timing Analysis by Provider */}
+      {successfulResults.length > 1 && (
+        <Box sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 2 }}>
+          <Typography variant="h6" fontWeight="600" sx={{ mb: 2 }}>
+            ⏱️ Processing Time Analysis
+          </Typography>
+          
+          {/* Provider Timing Breakdown */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2, mb: 2 }}>
+            {Object.entries(
+              successfulResults.reduce((acc, result) => {
+                const provider = result.provider
+                if (!acc[provider]) {
+                  acc[provider] = []
+                }
+                acc[provider].push(result)
+                return acc
+              }, {} as Record<string, TestResult[]>)
+            ).map(([provider, providerResults]) => {
+              const avgTime = providerResults.reduce((sum, r) => sum + (r.processingTime || 0), 0) / providerResults.length
+              const minTime = Math.min(...providerResults.map(r => r.processingTime || 0))
+              const maxTime = Math.max(...providerResults.map(r => r.processingTime || 0))
+              
+              return (
+                <Paper key={provider} sx={{ p: 2, border: '1px solid', borderColor: 'grey.300' }}>
+                  <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1 }}>
+                    🏢 {provider}
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Typography variant="body2">
+                      📊 Average: <strong>{formatProcessingTime(avgTime)}</strong>
+                    </Typography>
+                    <Typography variant="body2">
+                      🚀 Fastest: <strong>{formatProcessingTime(minTime)}</strong>
+                    </Typography>
+                    <Typography variant="body2">
+                      🐌 Slowest: <strong>{formatProcessingTime(maxTime)}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Models tested: {providerResults.length}
+                    </Typography>
+                  </Box>
+                  
+                  {/* Individual Model Times */}
+                  <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Typography variant="caption" fontWeight="600" color="primary.main">
+                      Model Performance:
+                    </Typography>
+                    {providerResults
+                      .sort((a, b) => (a.processingTime || 0) - (b.processingTime || 0))
+                      .map((result, index) => (
+                      <Box key={result.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                          {result.modelName}
+                        </Typography>
+                        <Chip
+                          label={formatProcessingTime(result.processingTime || 0)}
+                          size="small"
+                          color={index === 0 ? 'success' : 'default'}
+                          variant={index === 0 ? 'filled' : 'outlined'}
+                          sx={{ 
+                            fontSize: '0.6rem', 
+                            height: 20,
+                            '& .MuiChip-label': { px: 1 }
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
+              )
+            })}
+          </Box>
+          
+          {/* Overall Summary */}
+          <Typography variant="body2" color="text.secondary">
+            📈 Tested {results.length} models across {Object.keys(successfulResults.reduce((acc, r) => ({...acc, [r.provider]: true}), {})).length} providers with {successfulResults.length} successful transcriptions.
+            {fastestResult && (
+              <> The fastest overall result was <strong>{fastestResult.provider}'s {fastestResult.modelName}</strong> 
+              in <strong>{formatProcessingTime(fastestResult.processingTime || 0)}</strong>.</>
+            )}
+          </Typography>
+        </Box>
+      )}
+      
+      {/* Simple Summary for Single Result */}
+      {results.length === 1 && (
         <Box sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 2 }}>
           <Typography variant="h6" fontWeight="600" sx={{ mb: 1 }}>
-            Test Summary
+            Test Result
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Tested {results.length} models with {successfulResults.length} successful transcriptions.
-            {fastestResult && (
-              <> The fastest result was from {fastestResult.provider} with {fastestResult.modelName} 
-              in {formatProcessingTime(fastestResult.processingTime || 0)}.</>
+            Tested 1 model: {results[0].provider} - {results[0].modelName}
+            {results[0].success ? (
+              <> completed in <strong>{formatProcessingTime(results[0].processingTime || 0)}</strong>.</>
+            ) : (
+              <> failed with error.</>
             )}
           </Typography>
         </Box>
