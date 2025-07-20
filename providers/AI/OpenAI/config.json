@@ -1,0 +1,36 @@
+{
+  "provider": {
+    "id": "openai-ai",
+    "name": "OpenAI",
+    "description": "OpenAI's GPT models for text generation and chat completion",
+    "base_url": "https://api.openai.com/v1",
+    "requires_api_key": true,
+    "api_key_type": "bearer",
+    "icon_url": "https://openai.com/favicon.ico",
+    "logo_url": "https://openai.com/content/images/2022/05/openai-avatar.png"
+  },
+  "models": [
+    {
+      "id": "gpt-4o",
+      "name": "GPT-4o",
+      "description": "Most advanced GPT-4 model with improved reasoning",
+      "supported_languages": ["en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko", "zh"],
+      "features": ["Latest", "Multimodal", "128K context", "High reasoning"]
+    },
+    {
+      "id": "gpt-4o-mini",
+      "name": "GPT-4o Mini",
+      "description": "Faster and more affordable GPT-4o variant",
+      "supported_languages": ["en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko", "zh"],
+      "features": ["Fast", "Cost-effective", "128K context"]
+    },
+    {
+      "id": "gpt-3.5-turbo",
+      "name": "GPT-3.5 Turbo",
+      "description": "Fast and cost-effective model for most tasks",
+      "supported_languages": ["en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko", "zh"],
+      "features": ["Fast", "Affordable", "16K context"]
+    }
+  ],
+  "supported_languages": ["en-US", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "ja-JP", "ko-KR", "zh-CN"]
+}

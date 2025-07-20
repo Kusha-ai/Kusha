@@ -1,0 +1,86 @@
+{
+  "provider": {
+    "id": "elevenlabs-tts",
+    "name": "ElevenLabs Text-to-Speech",
+    "description": "High-quality AI voice synthesis with custom voice cloning",
+    "base_url": "https://api.elevenlabs.io/v1",
+    "requires_api_key": true,
+    "api_key_type": "xi-api-key",
+    "icon_url": "https://elevenlabs.io/favicon.ico",
+    "logo_url": "https://elevenlabs.io/logo.svg"
+  },
+  "models": [
+    {
+      "id": "eleven_multilingual_v2",
+      "name": "Multilingual v2",
+      "description": "Latest multilingual model with improved quality",
+      "max_characters": 2500,
+      "supported_formats": ["mp3", "wav", "pcm"],
+      "features": ["Multilingual", "High quality", "Custom voices"]
+    },
+    {
+      "id": "eleven_turbo_v2",
+      "name": "Turbo v2",
+      "description": "Fast model optimized for speed with good quality",
+      "max_characters": 2500,
+      "supported_formats": ["mp3", "wav", "pcm"],
+      "features": ["Fastest", "Low latency", "Good quality"]
+    },
+    {
+      "id": "eleven_monolingual_v1",
+      "name": "Monolingual v1",
+      "description": "English-only model with premium quality",
+      "max_characters": 2500,
+      "supported_formats": ["mp3", "wav", "pcm"],
+      "features": ["English only", "Premium quality", "Expressive"]
+    }
+  ],
+  "voices": [
+    {
+      "id": "21m00Tcm4TlvDq8ikWAM",
+      "name": "Rachel",
+      "description": "Young adult female with American accent",
+      "gender": "female",
+      "accent": "american",
+      "age": "young adult",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "AZnzlk1XvdvUeBnXmlld",
+      "name": "Domi",
+      "description": "Young female with strong accent",
+      "gender": "female",
+      "accent": "american",
+      "age": "young",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "EXAVITQu4vr4xnSDxMaL",
+      "name": "Bella",
+      "description": "Young female with American accent",
+      "gender": "female",
+      "accent": "american",
+      "age": "young",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "ErXwobaYiN019PkySvjV",
+      "name": "Antoni",
+      "description": "Young male with American accent",
+      "gender": "male",
+      "accent": "american",
+      "age": "young",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "VR6AewLTigWG4xSOukaG",
+      "name": "Arnold",
+      "description": "Middle-aged male with American accent",
+      "gender": "male",
+      "accent": "american",
+      "age": "middle aged",
+      "supported_languages": ["en-US"]
+    }
+  ],
+  "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN"]
+}

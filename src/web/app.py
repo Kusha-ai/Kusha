@@ -17,13 +17,13 @@ from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 import uvicorn
 
-# Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
+# Add project root to path for providers import  
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from utils.database import DatabaseManager
 from utils.elasticsearch_client import es_client
 from utils.auth import admin_auth, get_current_admin
-from providers.provider_manager import ProviderManager
+from providers import ProviderManager
 from services.analytics_service import analytics_service
 
 # Initialize provider manager

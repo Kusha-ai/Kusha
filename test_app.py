@@ -46,7 +46,9 @@ def test_web_application():
     # Test 3: Sarv ASR provider
     print("\n3. Testing Sarv ASR provider...")
     try:
-        from src.providers.sarv_asr import SarvASRProvider
+        # Updated import for consolidated provider structure
+# This would now need to be handled through the provider factory
+# from providers.ASR.Sarv import sarv_asr
         
         provider = SarvASRProvider()
         models = provider.get_available_models()

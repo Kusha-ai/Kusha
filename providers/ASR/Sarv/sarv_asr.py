@@ -1,219 +1,236 @@
-import os
-import time
 import requests
-import tempfile
 import json
-from typing import Dict, List, Optional, Any
+from typing import List, Dict, Optional
+import sys
+import os
+# Add providers/core to path for base provider import
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'core'))
 
 class SarvASR:
     """Sarv ASR provider for Indian languages"""
     
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict, api_key: str = None):
         self.config = config
-        self.base_url = config['provider']['base_url']
-        self.provider_id = config['provider']['id']
+        self.api_key = api_key or "http://103.255.103.118:5001"
         self.provider_name = config['provider']['name']
+        self.base_url = self.api_key.rstrip('/')
+        self.supported_languages = {
+            'assamese': 'as',
+            'bengali': 'bn',
+            'bodo': 'brx',
+            'dogri': 'doi',
+            'gujarati': 'gu',
+            'hindi': 'hi',
+            'kannada': 'kn',
+            'konkani': 'kok',
+            'kashmiri': 'ks',
+            'maithili': 'mai',
+            'malayalam': 'ml',
+            'manipuri': 'mni',
+            'marathi': 'mr',
+            'nepali': 'ne',
+            'odia': 'or',
+            'punjabi': 'pa',
+            'sanskrit': 'sa',
+            'santali': 'sat',
+            'sindhi': 'sd',
+            'tamil': 'ta',
+            'telugu': 'te',
+            'urdu': 'ur'
+        }
     
-    def get_supported_languages(self) -> List[str]:
-        """Get list of supported language codes"""
-        return list(self.config['languages'].keys())
-    
-    def get_available_models(self, language_code: str = None) -> List[Dict]:
-        """Get available models, optionally filtered by language"""
-        models = self.config['models']
-        if language_code:
-            models = [m for m in models if language_code in m['supported_languages']]
+    def get_available_models(self) -> List[Dict]:
+        models = []
+        
+        # Hindi-specific models
+        models.append({
+            'id': 'hindi-specific',
+            'name': 'Hindi Specific Model (CTC)',
+            'language_code': 'hi',
+            'decoding_strategy': 'ctc'
+        })
+        
+        models.append({
+            'id': 'hindi-specific-rnnt',
+            'name': 'Hindi Specific Model (RNNT)',
+            'language_code': 'hi',
+            'decoding_strategy': 'rnnt'
+        })
+        
+        # Hindi multilingual models
+        models.append({
+            'id': 'hindi-multilingual',
+            'name': 'Hindi Multilingual Model (CTC)',
+            'language_code': 'hi',
+            'decoding_strategy': 'ctc'
+        })
+        
+        models.append({
+            'id': 'hindi-multilingual-rnnt',
+            'name': 'Hindi Multilingual Model (RNNT)',
+            'language_code': 'hi',
+            'decoding_strategy': 'rnnt'
+        })
+        
+        # Multilingual models for other languages
+        for lang_name, lang_code in self.supported_languages.items():
+            if lang_code != 'hi':  # Skip Hindi as it's handled above
+                models.append({
+                    'id': f'multilingual-{lang_code}',
+                    'name': f'{lang_name.title()} Multilingual Model (CTC)',
+                    'language_code': lang_code,
+                    'decoding_strategy': 'ctc'
+                })
+                
+                models.append({
+                    'id': f'multilingual-{lang_code}-rnnt',
+                    'name': f'{lang_name.title()} Multilingual Model (RNNT)',
+                    'language_code': lang_code,
+                    'decoding_strategy': 'rnnt'
+                })
+        
         return models
     
-    def is_service_available(self) -> bool:
-        """Check if Sarv ASR service is available"""
-        try:
-            response = requests.get(f"{self.base_url}/status", timeout=5)
-            return response.status_code == 200
-        except:
-            return False
-    
-    def transcribe_audio(self, audio_file_path: str, model_id: str, language_code: str) -> Dict[str, Any]:
-        """
-        Transcribe audio using Sarv ASR
+    def _map_language_code(self, language_code: str) -> str:
+        """Map language codes from full format (e.g., hi-IN) to Sarv format (e.g., hi)"""
+        # If it's already in the short format, return as is
+        if language_code in self.supported_languages.values():
+            return language_code
         
-        Args:
-            audio_file_path: Path to audio file
-            model_id: Model ID to use ('hindi-specific', 'hindi-multilingual', 'multilingual')
-            language_code: Language code (e.g., 'hi-IN')
-            
-        Returns:
-            Dictionary with transcription results
-        """
+        # Map common full codes to short codes
+        code_mapping = {
+            'hi-IN': 'hi',
+            'as-IN': 'as',
+            'bn-IN': 'bn',
+            'brx-IN': 'brx',
+            'doi-IN': 'doi',
+            'gu-IN': 'gu',
+            'kn-IN': 'kn',
+            'kok-IN': 'kok',
+            'ks-IN': 'ks',
+            'mai-IN': 'mai',
+            'ml-IN': 'ml',
+            'mni-IN': 'mni',
+            'mr-IN': 'mr',
+            'ne-IN': 'ne',
+            'or-IN': 'or',
+            'pa-IN': 'pa',
+            'sa-IN': 'sa',
+            'sat-IN': 'sat',
+            'sd-IN': 'sd',
+            'ta-IN': 'ta',
+            'te-IN': 'te',
+            'ur-IN': 'ur'
+        }
+        
+        return code_mapping.get(language_code, language_code.split('-')[0])
+
+    def transcribe_audio(self, audio_file_path: str, model_id: str, language_code: str = 'hi') -> Dict:
         try:
-            # Convert language code from 'hi-IN' format to 'hi' format for Sarv API
-            sarv_language_code = language_code.split('-')[0] if '-' in language_code else language_code
+            url = f"{self.base_url}/upload"
             
-            # Open file outside timing (file I/O not included)
-            files = {
-                'audio': open(audio_file_path, 'rb')
-            }
+            # Parse model preferences from model_id
+            model_preference = None
+            decoding_strategy = 'ctc'
             
-            # Phase 1: Request preparation timing (only data preparation, no file I/O)
-            prep_start = time.time()
+            if 'hindi-specific' in model_id:
+                model_preference = 'hindi-specific'
+            elif 'hindi-multilingual' in model_id:
+                model_preference = 'hindi-multilingual'
             
-            data = {
-                'language': sarv_language_code
-            }
+            if 'rnnt' in model_id:
+                decoding_strategy = 'rnnt'
             
-            # Add model preference for Hindi
-            if language_code == 'hi-IN':
-                if model_id == 'hindi-specific':
-                    data['model_preference'] = 'hindi-specific'
-                elif model_id == 'hindi-multilingual':
-                    data['model_preference'] = 'hindi-multilingual'
-                # For multilingual model, let it auto-select
+            # Map language code to Sarv format
+            sarv_language_code = self._map_language_code(language_code)
             
-            prep_time = time.time() - prep_start
-            
-            # Phase 2: Network request timing
-            network_start = time.time()
-            
-            # Make request to Sarv ASR
-            response = requests.post(
-                f"{self.base_url}/upload",
-                files=files,
-                data=data,
-                timeout=30
-            )
-            
-            network_time = time.time() - network_start
-            
-            # Response processing (file cleanup)
-            response_start = time.time()
-            files['audio'].close()
-            response_time = time.time() - response_start
-            
-            # Use pure network time (matching direct API calls)
-            processing_time = network_time
+            # Prepare the request
+            with open(audio_file_path, 'rb') as audio_file:
+                files = {'audio': audio_file}
+                data = {
+                    'language': sarv_language_code,
+                    'decoding_strategy': decoding_strategy,
+                    'debug': 'true'  # Enable debug mode for detailed timing
+                }
+                
+                if model_preference:
+                    data['model_preference'] = model_preference
+                
+                response = requests.post(url, files=files, data=data)
             
             if response.status_code == 200:
                 result = response.json()
                 
-                return {
-                    'success': True,
-                    'provider': self.provider_name,
-                    'model_id': model_id,
-                    'language_code': language_code,
-                    'transcription': result.get('transcription', ''),
-                    'confidence': result.get('confidence', 0.95),  # Default confidence if not provided
-                    'processing_time': processing_time,
-                    'model_used': result.get('model_used', model_id),
-                    'real_time_factor': result.get('real_time_factor', None),
-                    'raw_response': result,
-                    # Detailed timing breakdown
-                    'timing_phases': {
-                        'preparation_time': prep_time,  # Actual data preparation time (no file I/O)
-                        'network_time': network_time,
-                        'response_processing_time': response_time,
-                        'model_processing_time': result.get('processing_time', network_time)  # Server-side model time if available
+                if result.get('success', False):
+                    return {
+                        'success': True,
+                        'transcription': result.get('transcription', ''),
+                        'confidence': 1.0,  # Sarv doesn't provide confidence scores
+                        'processing_time': result.get('processing_time', 0.0),
+                        'audio_duration': result.get('audio_duration', 0.0),
+                        'model_used': result.get('model_used', 'Unknown'),
+                        'real_time_factor': result.get('real_time_factor', 0.0),
+                        'end_to_end_time': result.get('end_to_end_time', 0.0),
+                        'error': None
                     }
-                }
+                else:
+                    return {
+                        'success': False,
+                        'error': result.get('detail', 'Unknown error'),
+                        'transcription': '',
+                        'confidence': 0.0
+                    }
             else:
                 return {
                     'success': False,
-                    'provider': self.provider_name,
-                    'model_id': model_id,
-                    'language_code': language_code,
                     'error': f"HTTP {response.status_code}: {response.text}",
-                    'processing_time': processing_time,
-                    'timing_phases': {
-                        'preparation_time': prep_time,
-                        'network_time': network_time,
-                        'response_processing_time': response_time,
-                        'model_processing_time': 0
-                    }
+                    'transcription': '',
+                    'confidence': 0.0
                 }
-                
+        
         except Exception as e:
-            # If error occurred before timing started, set minimal processing time
-            processing_time = getattr(locals(), 'processing_time', 0.001)
-            prep_time = getattr(locals(), 'prep_time', 0.001)
-            network_time = getattr(locals(), 'network_time', 0)
-            response_time = getattr(locals(), 'response_time', 0)
-            
             return {
                 'success': False,
-                'provider': self.provider_name,
-                'model_id': model_id,
-                'language_code': language_code,
                 'error': str(e),
-                'processing_time': processing_time,
-                'timing_phases': {
-                    'preparation_time': prep_time,
-                    'network_time': network_time,
-                    'response_processing_time': response_time,
-                    'model_processing_time': 0
-                }
+                'transcription': '',
+                'confidence': 0.0
             }
     
-    def test_speed(self, audio_file_path: str, model_id: str, language_code: str = 'en-US') -> Dict:
-        """
-        Test processing speed by measuring total processing time around transcribe_audio call
-        
-        Args:
-            audio_file_path: Path to audio file
-            model_id: Model ID to use
-            language_code: Language code (e.g., 'en-US')
-            
-        Returns:
-            Dictionary with detailed timing information
-        """
-        total_start_time = time.time()
-        result = self.transcribe_audio(audio_file_path, model_id, language_code)
-        total_end_time = time.time()
-        
-        total_processing_time = total_end_time - total_start_time
-        api_processing_time = result.get('processing_time', 0.0)  # API call time from transcribe_audio
-        overhead_time = total_processing_time - api_processing_time
-        
-        # Update result with detailed timing
-        result['api_call_time'] = api_processing_time
-        result['total_processing_time'] = total_processing_time
-        result['overhead_time'] = overhead_time
-        result['processing_time'] = api_processing_time  # Keep for backward compatibility
-        
-        return result
-    
-    def test_connection(self) -> Dict[str, Any]:
-        """Test connection to Sarv ASR service"""
+    def get_service_status(self) -> Dict:
+        """Get service status and model information"""
         try:
-            response = requests.get(f"{self.base_url}/status", timeout=10)
+            url = f"{self.base_url}/status"
+            response = requests.get(url)
             
             if response.status_code == 200:
-                models = self.get_available_models()
-                status_data = response.json()
-                
-                return {
-                    'success': True,
-                    'message': f"Connected successfully. {len(models)} models available.",
-                    'models_count': len(models),
-                    'languages_count': len(self.get_supported_languages()),
-                    'service_status': status_data
-                }
+                return response.json()
             else:
                 return {
-                    'success': False,
-                    'message': f"Service responded with status {response.status_code}"
+                    'error': f"HTTP {response.status_code}: {response.text}",
+                    'model_loaded': False
                 }
+        
         except Exception as e:
             return {
-                'success': False,
-                'message': f"Connection failed: {str(e)}"
+                'error': str(e),
+                'model_loaded': False
             }
     
-    def get_service_info(self) -> Dict[str, Any]:
-        """Get service information"""
-        return {
-            'provider': self.provider_name,
-            'provider_id': self.provider_id,
-            'base_url': self.base_url,
-            'supported_languages': len(self.get_supported_languages()),
-            'available_models': len(self.config['models']),
-            'requires_api_key': self.config['provider']['requires_api_key']
-        }
+    def get_supported_languages(self) -> Dict[str, str]:
+        """Get supported languages"""
+        return self.supported_languages
+    
+    def is_service_available(self) -> bool:
+        """Check if the Sarv ASR service is available"""
+        try:
+            status = self.get_service_status()
+            return status.get('model_loaded', False)
+        except:
+            return False
+    
+    def get_language_name(self, language_code: str) -> str:
+        """Get language name from language code"""
+        for name, code in self.supported_languages.items():
+            if code == language_code:
+                return name.title()
+        return language_code

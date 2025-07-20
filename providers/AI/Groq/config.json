@@ -25,11 +25,5 @@
       "features": ["Ultra-fast", "32K context", "Multilingual"]
     }
   ],
-  "languages": {
-    "en": {
-      "name": "English",
-      "flag": "🇬🇧",
-      "region": "Global"
-    }
-  }
+  "supported_languages": ["en-US", "fr-FR", "de-DE", "es-ES", "it-IT"]
 }

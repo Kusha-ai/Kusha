@@ -10,9 +10,8 @@ class ProviderManager:
     
     def __init__(self, providers_dir: str = None):
         if providers_dir is None:
-            # Default to providers folder in project root
-            project_root = Path(__file__).parent.parent.parent
-            providers_dir = project_root / 'providers'
+            # Default to providers folder (parent of core)
+            providers_dir = Path(__file__).parent.parent
         
         self.providers_dir = Path(providers_dir)
         self.providers = {}

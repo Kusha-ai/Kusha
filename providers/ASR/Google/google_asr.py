@@ -17,13 +17,13 @@ class GoogleASR:
     
     def get_supported_languages(self) -> List[str]:
         """Get list of supported language codes"""
-        return list(self.config['languages'].keys())
+        return self.config.get('supported_languages', [])
     
     def get_available_models(self, language_code: str = None) -> List[Dict]:
         """Get available models, optionally filtered by language"""
         models = self.config['models']
         if language_code:
-            models = [m for m in models if language_code in m['supported_languages']]
+            models = [m for m in models if language_code in m.get('supported_languages', [])]
         return models
     
     def is_service_available(self) -> bool:
@@ -49,13 +49,9 @@ class GoogleASR:
                 'model_id': model_id,
                 'language_code': language_code,
                 'error': 'API key not provided',
-                'processing_time': 0,
-                'timing_phases': {
-                    'preparation_time': 0,
-                    'network_time': 0,
-                    'response_processing_time': 0,
-                    'model_processing_time': 0
-                }
+                'transcription': '',
+                'confidence': 0.0,
+                'processing_time': 0
             }
         
         try:
@@ -111,12 +107,8 @@ class GoogleASR:
             
             network_time = time.time() - network_start
             
-            # Phase 3: Response processing
-            response_start = time.time()
-            
             # Total processing time (network only for backward compatibility)
             processing_time = network_time
-            response_time = time.time() - response_start
             
             if response.status_code == 200:
                 result = response.json()
@@ -147,14 +139,7 @@ class GoogleASR:
                             'transcription': alternative.get('transcript', ''),
                             'confidence': avg_confidence,
                             'processing_time': processing_time,
-                            'raw_response': result,
-                            # Detailed timing breakdown
-                            'timing_phases': {
-                                'preparation_time': prep_time,
-                                'network_time': network_time,
-                                'response_processing_time': response_time,
-                                'model_processing_time': network_time  # Google doesn't provide server-side processing time
-                            }
+                            'error': None
                         }
                 
                 return {
@@ -163,13 +148,9 @@ class GoogleASR:
                     'model_id': model_id,
                     'language_code': language_code,
                     'error': 'No transcription results returned',
-                    'processing_time': processing_time,
-                    'timing_phases': {
-                        'preparation_time': prep_time,
-                        'network_time': network_time,
-                        'response_processing_time': response_time,
-                        'model_processing_time': 0
-                    }
+                    'transcription': '',
+                    'confidence': 0.0,
+                    'processing_time': processing_time
                 }
             else:
                 error_detail = "Unknown error"
@@ -186,64 +167,22 @@ class GoogleASR:
                     'model_id': model_id,
                     'language_code': language_code,
                     'error': f"HTTP {response.status_code}: {error_detail}",
-                    'processing_time': processing_time,
-                    'timing_phases': {
-                        'preparation_time': prep_time,
-                        'network_time': network_time,
-                        'response_processing_time': response_time,
-                        'model_processing_time': 0
-                    }
+                    'transcription': '',
+                    'confidence': 0.0,
+                    'processing_time': processing_time
                 }
                 
         except Exception as e:
-            # If error occurred before timing started, set minimal processing time
-            processing_time = getattr(locals(), 'processing_time', 0.001)
-            prep_time = getattr(locals(), 'prep_time', 0.001)
-            network_time = getattr(locals(), 'network_time', 0)
-            response_time = getattr(locals(), 'response_time', 0)
-            
             return {
                 'success': False,
                 'provider': self.provider_name,
                 'model_id': model_id,
                 'language_code': language_code,
                 'error': str(e),
-                'processing_time': processing_time,
-                'timing_phases': {
-                    'preparation_time': prep_time,
-                    'network_time': network_time,
-                    'response_processing_time': response_time,
-                    'model_processing_time': 0
-                }
+                'transcription': '',
+                'confidence': 0.0,
+                'processing_time': 0.0
             }
-    
-    def test_speed(self, audio_file_path: str, model_id: str, language_code: str = 'en-US') -> Dict:
-        """
-        Test processing speed by measuring total processing time around transcribe_audio call
-        
-        Args:
-            audio_file_path: Path to audio file
-            model_id: Model ID to use
-            language_code: Language code (e.g., 'en-US')
-            
-        Returns:
-            Dictionary with detailed timing information
-        """
-        total_start_time = time.time()
-        result = self.transcribe_audio(audio_file_path, model_id, language_code)
-        total_end_time = time.time()
-        
-        total_processing_time = total_end_time - total_start_time
-        api_processing_time = result.get('processing_time', 0.0)  # API call time from transcribe_audio
-        overhead_time = total_processing_time - api_processing_time
-        
-        # Update result with detailed timing
-        result['api_call_time'] = api_processing_time
-        result['total_processing_time'] = total_processing_time
-        result['overhead_time'] = overhead_time
-        result['processing_time'] = api_processing_time  # Keep for backward compatibility
-        
-        return result
     
     def test_connection(self) -> Dict[str, Any]:
         """Test connection to Google Cloud Speech service"""

@@ -25,11 +25,5 @@
       "features": ["WaveNet", "Standard", "Cost-effective"]
     }
   ],
-  "languages": {
-    "en-US": {
-      "name": "English (US)",
-      "flag": "🇺🇸",
-      "region": "United States"
-    }
-  }
+  "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
 }
