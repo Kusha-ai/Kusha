@@ -60,7 +60,7 @@ const TestRunner: React.FC<TestRunnerProps> = ({
     
     // Initialize test results with model info
     const initialResults: TestResult[] = models.map((modelId, index) => ({
-      id: `test-${index}`,
+      id: `test-${modelId}-${Date.now()}-${index}`, // Use modelId in ID for stability
       modelId,
       modelName: modelId.split('-').slice(1).join(' '), // Extract name from ID
       provider: modelId.split('-')[0], // Extract provider from ID
@@ -110,9 +110,9 @@ const TestRunner: React.FC<TestRunnerProps> = ({
         
         results.push(testResult)
         
-        // Update the specific test result
-        setCurrentTests(prev => prev.map((test, index) => 
-          test.modelId === testResult.modelId || index === i 
+        // Update the specific test result by ID for stable updates
+        setCurrentTests(prev => prev.map(test => 
+          test.id === testResult.id 
             ? { ...testResult, running: false } 
             : test
         ))

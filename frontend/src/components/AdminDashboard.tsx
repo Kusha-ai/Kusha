@@ -403,7 +403,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
                   </TableHead>
                   <TableBody>
                     {getProviderStats().map((provider, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={`provider-${provider.name}-${index}`}>
                         <TableCell>
                           <Chip label={provider.name} size="small" />
                         </TableCell>
@@ -457,7 +457,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
                   </TableHead>
                   <TableBody>
                     {getLanguageStats().slice(0, 8).map((language, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={`language-${language.name}-${index}`}>
                         <TableCell>
                           <Chip label={language.name} size="small" color="secondary" />
                         </TableCell>
@@ -512,7 +512,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
                   </TableHead>
                   <TableBody>
                     {getRecordingAnalysis().map((analysis, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={`analysis-${analysis.duration}-${index}`}>
                         <TableCell>
                           <Chip label={analysis.duration} size="small" variant="outlined" />
                         </TableCell>
@@ -549,7 +549,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
               
               <List sx={{ maxHeight: 300, overflow: 'auto' }}>
                 {getRecentTests().map((test, index) => (
-                  <React.Fragment key={index}>
+                  <React.Fragment key={`test-${index}-${test.timestamp.getTime()}`}>
                     <ListItem sx={{ px: 0 }}>
                       <ListItemIcon>
                         {test.success ? (
@@ -582,7 +582,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ accessToken, onLogout }
                         }
                       />
                     </ListItem>
-                    {index < getRecentTests().length - 1 && <Divider />}
+                    {index < getRecentTests().length - 1 && <Divider key={`divider-${index}`} />}
                   </React.Fragment>
                 ))}
               </List>

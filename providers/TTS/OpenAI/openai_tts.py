@@ -49,50 +49,111 @@ class OpenAITTS:
     
     def get_available_voices(self, language_code: str = 'en-US') -> List[Dict]:
         """Get available voices for OpenAI TTS"""
-        return [
+        # Get comprehensive language support from config
+        comprehensive_languages = self._get_comprehensive_languages()
+        
+        # Define all available voices with comprehensive language support (updated with official OpenAI voices)
+        all_voices = [
             {
                 'id': 'alloy',
                 'name': 'Alloy',
                 'description': 'Balanced and versatile voice',
                 'gender': 'neutral',
-                'language_codes': ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN', 'hi-IN', 'ar-SA']
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
             },
             {
                 'id': 'echo',
                 'name': 'Echo',
                 'description': 'Warm and friendly voice',
                 'gender': 'male',
-                'language_codes': ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN', 'hi-IN', 'ar-SA']
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
             },
             {
                 'id': 'fable',
                 'name': 'Fable',
                 'description': 'Expressive and storytelling voice',
                 'gender': 'male',
-                'language_codes': ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN', 'hi-IN', 'ar-SA']
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
             },
             {
                 'id': 'onyx',
                 'name': 'Onyx',
                 'description': 'Deep and authoritative voice',
                 'gender': 'male',
-                'language_codes': ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN', 'hi-IN', 'ar-SA']
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
             },
             {
                 'id': 'nova',
                 'name': 'Nova',
                 'description': 'Clear and professional voice',
                 'gender': 'female',
-                'language_codes': ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN', 'hi-IN', 'ar-SA']
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
             },
             {
                 'id': 'shimmer',
                 'name': 'Shimmer',
                 'description': 'Bright and energetic voice',
                 'gender': 'female',
-                'language_codes': ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN', 'hi-IN', 'ar-SA']
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
+            },
+            {
+                'id': 'ash',
+                'name': 'Ash',
+                'description': 'Warm and friendly voice (new)',
+                'gender': 'male',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
+            },
+            {
+                'id': 'ballad',
+                'name': 'Ballad',
+                'description': 'Melodic and expressive voice (new)',
+                'gender': 'female',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
+            },
+            {
+                'id': 'coral',
+                'name': 'Coral',
+                'description': 'Cheerful and positive voice (new)',
+                'gender': 'female',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
+            },
+            {
+                'id': 'sage',
+                'name': 'Sage',
+                'description': 'Wise and thoughtful voice (new)',
+                'gender': 'neutral',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages
             }
         ]
+        
+        # Filter voices that support the requested language
+        filtered_voices = []
+        if language_code in comprehensive_languages:
+            filtered_voices = all_voices
+        
+        return filtered_voices
+
+    def _get_comprehensive_languages(self) -> List[str]:
+        """Get comprehensive language support from config"""
+        try:
+            # Always read from config to follow DRY principle
+            if hasattr(self, 'config') and 'supported_languages' in self.config:
+                return self.config['supported_languages']
+        except:
+            pass
+        
+        # Fallback to basic languages if config loading fails
+        return ["en-US", "en-GB"]
     
     def generate_speech(self, text: str, voice_id: str, model_id: str = 'tts-1', 
                        language_code: str = 'en-US', audio_format: str = 'mp3', speed: float = 1.0) -> Dict:

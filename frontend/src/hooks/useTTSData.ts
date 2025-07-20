@@ -98,7 +98,18 @@ export const useTTSData = (): UseTTSDataReturn => {
         throw new Error(`Failed to fetch providers: ${providersResponse.statusText}`)
       }
       const providersData = await providersResponse.json()
-      setProviders(providersData.providers || [])
+      
+      // Ensure provider data has proper structure with fallbacks
+      const processedProviders = (providersData.providers || []).map((provider: any) => ({
+        id: provider.id,
+        name: provider.name || provider.id, // Fallback to ID if name is missing
+        description: provider.description || '',
+        icon_url: provider.icon_url || '',
+        logo_url: provider.logo_url || '',
+        isActivated: provider.isActivated || false
+      }))
+      
+      setProviders(processedProviders)
 
     } catch (err) {
       console.error('Error fetching TTS data:', err)

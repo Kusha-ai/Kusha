@@ -12,22 +12,34 @@
   },
   "models": [
     {
+      "id": "gpt-4o-mini-tts",
+      "name": "GPT-4o Mini TTS (Latest)",
+      "description": "Newest and most reliable text-to-speech model with advanced control features",
+      "max_characters": 4096,
+      "supported_formats": ["mp3", "opus", "aac", "flac", "wav", "pcm"],
+      "cost_per_1k_chars": 0.015,
+      "features": ["Latest model", "Instructions support", "Accent control", "Emotional range", "Speed control", "Tone control"],
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
+    },
+    {
       "id": "tts-1",
       "name": "TTS-1 (Standard)",
       "description": "Standard text-to-speech model with good quality and speed",
       "max_characters": 4096,
-      "supported_formats": ["mp3", "opus", "aac", "flac"],
+      "supported_formats": ["mp3", "opus", "aac", "flac", "wav", "pcm"],
       "cost_per_1k_chars": 0.015,
-      "features": ["Fast", "Cost-effective", "Multiple formats"]
+      "features": ["Fast", "Cost-effective", "Multiple formats"],
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     },
     {
       "id": "tts-1-hd",
       "name": "TTS-1-HD (High Definition)",
       "description": "High-definition text-to-speech model with superior quality",
       "max_characters": 4096,
-      "supported_formats": ["mp3", "opus", "aac", "flac"],
+      "supported_formats": ["mp3", "opus", "aac", "flac", "wav", "pcm"],
       "cost_per_1k_chars": 0.030,
-      "features": ["High quality", "Premium", "Multiple formats"]
+      "features": ["High quality", "Premium", "Multiple formats"],
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     }
   ],
   "voices": [
@@ -36,43 +48,71 @@
       "name": "Alloy",
       "description": "Balanced and versatile voice",
       "gender": "neutral",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     },
     {
       "id": "echo",
       "name": "Echo",
       "description": "Warm and friendly voice",
       "gender": "male",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     },
     {
       "id": "fable",
       "name": "Fable",
       "description": "Expressive and storytelling voice",
       "gender": "male",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     },
     {
       "id": "onyx",
       "name": "Onyx",
       "description": "Deep and authoritative voice",
       "gender": "male",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     },
     {
       "id": "nova",
       "name": "Nova",
       "description": "Clear and professional voice",
       "gender": "female",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     },
     {
       "id": "shimmer",
       "name": "Shimmer",
       "description": "Bright and energetic voice",
       "gender": "female",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
+    },
+    {
+      "id": "ash",
+      "name": "Ash",
+      "description": "Warm and friendly voice (new)",
+      "gender": "male",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
+    },
+    {
+      "id": "ballad",
+      "name": "Ballad",
+      "description": "Melodic and expressive voice (new)",
+      "gender": "female",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
+    },
+    {
+      "id": "coral",
+      "name": "Coral",
+      "description": "Cheerful and positive voice (new)",
+      "gender": "female",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
+    },
+    {
+      "id": "sage",
+      "name": "Sage",
+      "description": "Wise and thoughtful voice (new)",
+      "gender": "neutral",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
     }
   ],
-  "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+  "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
 }

@@ -94,8 +94,14 @@ class ProviderManager:
             
             # Use the first Python file (or find one that matches pattern)
             impl_file = None
+            ai_type_lower = ai_type.lower()
             for py_file in python_files:
-                if py_file.name.endswith('_asr.py') or py_file.name == f"{provider_id}_asr.py":
+                # Try to match provider type first (e.g., _tts.py, _asr.py)
+                if py_file.name.endswith(f'_{ai_type_lower}.py') or py_file.name == f"{provider_id}_{ai_type_lower}.py":
+                    impl_file = py_file
+                    break
+                # Fallback to ASR pattern for backwards compatibility
+                elif py_file.name.endswith('_asr.py') or py_file.name == f"{provider_id}_asr.py":
                     impl_file = py_file
                     break
             
@@ -236,15 +242,21 @@ class ProviderManager:
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             
-            # Find the ASR class (convention: ProviderNameASR)
+            # Find the provider class (convention: ProviderNameASR, ProviderNameTTS, etc.)
+            provider_type = provider_info['ai_type']
+            class_suffixes = [provider_type, 'ASR']  # Try provider type first, then default to ASR
+            
             class_name = None
-            for attr_name in dir(module):
-                if attr_name.endswith('ASR') and not attr_name.startswith('_'):
-                    class_name = attr_name
+            for suffix in class_suffixes:
+                for attr_name in dir(module):
+                    if attr_name.endswith(suffix) and not attr_name.startswith('_'):
+                        class_name = attr_name
+                        break
+                if class_name:
                     break
             
             if not class_name:
-                raise ValueError(f"No ASR class found in {impl_file}")
+                raise ValueError(f"No {provider_type} class found in {impl_file}")
             
             provider_class = getattr(module, class_name)
             
@@ -256,7 +268,7 @@ class ProviderManager:
     
     def _warm_up_providers(self):
         """Pre-load and warm up all provider classes for optimal performance"""
-        print("🔥 Warming up ASR providers...")
+        print("🔥 Warming up providers...")
         
         for provider_id in self.providers.keys():
             try:

@@ -103,9 +103,9 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
                 id: `${provider.id}-${model.id}`,
                 name: model.name,
                 provider_id: provider.id,
-                provider_name: provider.name,
-                provider_icon_url: provider.icon_url,
-                provider_logo_url: provider.logo_url,
+                provider_name: provider.name || provider.id, // Fix: use fallback if name is undefined
+                provider_icon_url: provider.icon_url || '',
+                provider_logo_url: provider.logo_url || '',
                 description: model.description,
                 features: model.features || [],
                 hasApiKey: true, // Assume true if provider is activated
@@ -116,7 +116,7 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
             })
           }
         } catch (err) {
-          console.error(`Error fetching models for ${provider.name}:`, err)
+          console.error(`Error fetching models for ${provider.name || provider.id}:`, err)
         }
       }
 

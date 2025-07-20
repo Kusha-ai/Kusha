@@ -361,8 +361,19 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
     size?: number
   }
 
+
+  // Stable image error tracking outside component to prevent re-render issues
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({})
+  
   const ProviderIcon: React.FC<ProviderIconProps> = ({ provider_name, provider_icon_url, size = 20 }) => {
-    if (provider_icon_url) {
+    const imageKey = `${provider_name}-${provider_icon_url}`
+    const hasImageError = imageErrors[imageKey]
+    
+    const handleImageError = () => {
+      setImageErrors(prev => ({ ...prev, [imageKey]: true }))
+    }
+    
+    if (provider_icon_url && !hasImageError) {
       return (
         <Box
           component="img"
@@ -374,43 +385,55 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
             borderRadius: '4px',
             objectFit: 'contain',
           }}
-          onError={(e) => {
-            // Fallback to text if image fails to load
-            const target = e.target as HTMLImageElement
-            target.style.display = 'none'
-            const parent = target.parentElement
-            if (parent) {
-              parent.innerHTML = `
-                <div style="
-                  width: ${size}px; 
-                  height: ${size}px; 
-                  background-color: #1976d2; 
-                  border-radius: 4px; 
-                  display: flex; 
-                  align-items: center; 
-                  justify-content: center; 
-                  color: white; 
-                  font-weight: bold; 
-                  font-size: ${size * 0.6}px;
-                ">
-                  ${provider_name.substring(0, 1).toUpperCase()}
-                </div>
-              `
-            }
-          }}
+          onError={handleImageError}
         />
       )
     }
 
-    // Fallback - no icon
-    return null
+    // Fallback - provider initial in a styled box
+    return (
+      <Box
+        sx={{
+          width: size,
+          height: size,
+          backgroundColor: 'primary.main',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: `${size * 0.6}px`,
+        }}
+      >
+        {provider_name ? provider_name.substring(0, 1).toUpperCase() : '?'}
+      </Box>
+    )
   }
 
-  const filteredApiKeys = apiKeys.filter(provider => provider.provider_type === selectedAiType)
+  const filteredApiKeys = React.useMemo(() => {
+    return apiKeys.filter(provider => provider.provider_type === selectedAiType)
+      .map(provider => ({
+        ...provider,
+        // Ensure provider name is always available
+        provider_name: provider.provider_name || provider.provider_id || `${provider.provider_type} Provider`,
+      }))
+  }, [apiKeys, selectedAiType])
 
   useEffect(() => {
     fetchApiKeys()
   }, [])
+
+  // Debug: Log provider data when it changes
+  useEffect(() => {
+    if (selectedAiType === 'TTS' && apiKeys.length > 0) {
+      console.log('TTS Providers:', filteredApiKeys.map(p => ({ 
+        id: p.provider_id, 
+        name: p.provider_name,
+        type: p.provider_type 
+      })))
+    }
+  }, [apiKeys, selectedAiType, filteredApiKeys])
 
   if (loading) {
     return (
@@ -553,7 +576,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
           </TableHead>
           <TableBody>
             {filteredApiKeys.map((provider) => (
-              <TableRow key={provider.provider_id} hover>
+              <TableRow key={`apikey-${provider.provider_id}`} hover>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ProviderIcon
@@ -561,7 +584,11 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ accessToken }) => {
                       provider_icon_url={provider.provider_icon_url}
                       size={20}
                     />
-                    <Typography variant="body2" fontWeight="600">
+                    <Typography 
+                      variant="body2" 
+                      fontWeight="600"
+                      sx={{ minWidth: '150px' }} // Prevent layout shift
+                    >
                       {provider.provider_name}
                     </Typography>
                     {!provider.requires_api_key && (

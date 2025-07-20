@@ -145,7 +145,7 @@ const TTSResultsDisplay: React.FC<TTSResultsDisplayProps> = ({ results }) => {
           </TableHead>
           <TableBody>
             {results.map((result, index) => {
-              const resultId = `${index}-${result.provider}-${result.voice}`
+              const resultId = `${result.provider}-${result.model}-${result.voice}-${index}`
               
               return (
                 <TableRow 
@@ -161,7 +161,7 @@ const TTSResultsDisplay: React.FC<TTSResultsDisplayProps> = ({ results }) => {
                         <VolumeIcon />
                       </Avatar>
                       <Typography variant="body2" fontWeight="600">
-                        {result.provider}
+                        {result.provider || 'Unknown Provider'}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -258,7 +258,7 @@ const TTSResultsDisplay: React.FC<TTSResultsDisplayProps> = ({ results }) => {
           </Typography>
           {failedResults.map((result, index) => (
             <Alert 
-              key={`error-${index}`} 
+              key={`error-${result.provider}-${result.model}-${result.voice}-${index}`} 
               severity="error" 
               sx={{ mb: 1, borderRadius: 2 }}
             >
@@ -294,7 +294,7 @@ const TTSResultsDisplay: React.FC<TTSResultsDisplayProps> = ({ results }) => {
                 {successfulResults
                   .sort((a, b) => a.processing_time - b.processing_time)
                   .map((result, index) => (
-                    <TableRow key={`perf-${index}`}>
+                    <TableRow key={`perf-${result.provider}-${result.voice}-${index}`}>
                       <TableCell>
                         <Chip
                           label={`#${index + 1}`}
@@ -302,7 +302,7 @@ const TTSResultsDisplay: React.FC<TTSResultsDisplayProps> = ({ results }) => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{result.provider}</TableCell>
+                      <TableCell>{result.provider || 'Unknown Provider'}</TableCell>
                       <TableCell>{result.voice}</TableCell>
                       <TableCell>{formatProcessingTime(result.processing_time)}</TableCell>
                       <TableCell>

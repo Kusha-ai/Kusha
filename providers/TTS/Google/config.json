@@ -15,21 +15,21 @@
       "id": "neural2",
       "name": "Neural2 (Latest)",
       "description": "Latest high-quality neural voices with natural intonation",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN"],
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA"],
       "features": ["Neural", "High-quality", "Natural intonation"]
     },
     {
       "id": "wavenet",
       "name": "WaveNet",
       "description": "Premium quality WaveNet voices with human-like speech",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN"],
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA"],
       "features": ["WaveNet", "Premium", "Human-like"]
     },
     {
       "id": "standard",
       "name": "Standard",
       "description": "Standard quality voices, cost-effective",
-      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN"],
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA"],
       "features": ["Standard", "Cost-effective", "Reliable"]
     }
   ],
@@ -99,5 +99,5 @@
       "supported_languages": ["en-GB"]
     }
   ],
-  "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]
+  "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA", "nl-NL", "pl-PL", "sv-SE", "tr-TR", "no-NO", "da-DK", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "ro-RO", "bg-BG", "hr-HR", "sl-SI", "et-EE", "lv-LV", "lt-LT", "ru-RU", "th-TH", "vi-VN", "id-ID", "ms-MY", "tl-PH", "ka-GE", "hy-AM", "az-AZ", "kk-KZ", "ky-KG", "uz-UZ", "mn-MN", "ne-NP", "bn-BD", "bn-IN", "ur-PK", "fa-IR", "sw-KE", "am-ET", "yo-NG", "ig-NG", "ha-NG", "zu-ZA", "af-ZA", "pa-IN", "gu-IN", "ta-IN", "te-IN", "kn-IN", "ml-IN", "mr-IN", "as-IN", "or-IN"]
 }

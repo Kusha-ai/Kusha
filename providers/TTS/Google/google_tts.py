@@ -69,26 +69,38 @@ class GoogleTTS:
     def get_available_voices(self, language_code: str = 'en-US') -> List[Dict]:
         """Get available voices for Google TTS"""
         if not self.client:
-            return []
+            return self._get_fallback_voices(language_code)
         
         try:
             # Get list of available voices
             voices_response = self.client.list_voices()
             
+            # Get comprehensive language support from config
+            comprehensive_languages = self._get_comprehensive_languages()
+            
             voices = []
             for voice in voices_response.voices:
-                if language_code in voice.language_codes:
+                # Check if voice supports the requested language (from API) OR if the language is in comprehensive list
+                if language_code in voice.language_codes or language_code in comprehensive_languages:
                     voice_type = 'Neural2' if 'Neural2' in voice.name else 'WaveNet' if 'Wavenet' in voice.name else 'Standard'
                     gender = 'male' if voice.ssml_gender == texttospeech.SsmlVoiceGender.MALE else 'female'
                     
-                    voices.append({
+                    # Enhance language codes with comprehensive support
+                    enhanced_language_codes = list(set(list(voice.language_codes) + comprehensive_languages))
+                    
+                    voice_data = {
                         'id': voice.name,
                         'name': voice.name,
                         'description': f'{voice_type} {gender} voice',
                         'gender': gender,
-                        'language_codes': list(voice.language_codes),
+                        'language_codes': enhanced_language_codes,
+                        'supported_languages': enhanced_language_codes,  # Add this for consistency
                         'voice_type': voice_type.lower()
-                    })
+                    }
+                    
+                    # Only add voice if it supports the requested language
+                    if language_code in enhanced_language_codes:
+                        voices.append(voice_data)
             
             return voices
             
@@ -96,38 +108,68 @@ class GoogleTTS:
             print(f"Failed to get Google TTS voices: {e}")
             return self._get_fallback_voices(language_code)
     
+    def _get_comprehensive_languages(self) -> List[str]:
+        """Get comprehensive language support from config"""
+        try:
+            # Always read from config to follow DRY principle
+            if hasattr(self, 'config') and 'supported_languages' in self.config:
+                return self.config['supported_languages']
+        except:
+            pass
+        
+        # Fallback to basic languages if config loading fails
+        return ["en-US", "en-GB"]
+
     def _get_fallback_voices(self, language_code: str) -> List[Dict]:
         """Get fallback voices when API call fails"""
-        fallback_voices = {
-            'en-US': [
-                {
-                    'id': 'en-US-Neural2-A',
-                    'name': 'en-US-Neural2-A',
-                    'description': 'Neural2 female voice',
-                    'gender': 'female',
-                    'language_codes': ['en-US'],
-                    'voice_type': 'neural2'
-                },
-                {
-                    'id': 'en-US-Neural2-C',
-                    'name': 'en-US-Neural2-C',
-                    'description': 'Neural2 female voice',
-                    'gender': 'female',
-                    'language_codes': ['en-US'],
-                    'voice_type': 'neural2'
-                },
-                {
-                    'id': 'en-US-Neural2-D',
-                    'name': 'en-US-Neural2-D',
-                    'description': 'Neural2 male voice',
-                    'gender': 'male',
-                    'language_codes': ['en-US'],
-                    'voice_type': 'neural2'
-                }
-            ]
-        }
+        comprehensive_languages = self._get_comprehensive_languages()
         
-        return fallback_voices.get(language_code, fallback_voices['en-US'])
+        # Enhanced fallback voices with comprehensive language support
+        fallback_voices = [
+            {
+                'id': 'en-US-Neural2-A',
+                'name': 'en-US-Neural2-A',
+                'description': 'Neural2 female voice',
+                'gender': 'female',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages,
+                'voice_type': 'neural2'
+            },
+            {
+                'id': 'en-US-Neural2-C',
+                'name': 'en-US-Neural2-C',
+                'description': 'Neural2 female voice',
+                'gender': 'female',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages,
+                'voice_type': 'neural2'
+            },
+            {
+                'id': 'hi-IN-Neural2-A',
+                'name': 'hi-IN-Neural2-A',
+                'description': 'Neural2 female Hindi voice',
+                'gender': 'female',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages,
+                'voice_type': 'neural2'
+            },
+            {
+                'id': 'hi-IN-Neural2-B',
+                'name': 'hi-IN-Neural2-B',
+                'description': 'Neural2 male Hindi voice',
+                'gender': 'male',
+                'language_codes': comprehensive_languages,
+                'supported_languages': comprehensive_languages,
+                'voice_type': 'neural2'
+            }
+        ]
+        
+        # Filter fallback voices by requested language
+        if language_code in comprehensive_languages:
+            return fallback_voices
+        else:
+            # If language not supported, return empty list
+            return []
     
     def synthesize_speech(self, text: str, voice_id: str, language_code: str = 'en-US',
                          audio_format: str = 'mp3', speed: float = 1.0) -> Dict:

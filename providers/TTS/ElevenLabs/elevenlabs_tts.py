@@ -86,19 +86,26 @@ class ElevenLabsTTS:
                 voices_data = response.json()
                 voices = []
                 
+                # Get comprehensive language support from config
+                comprehensive_languages = self._get_comprehensive_languages()
+                
                 for voice in voices_data.get('voices', []):
-                    # ElevenLabs voices work with multiple languages
-                    voices.append({
+                    # ElevenLabs voices work with multiple languages - use comprehensive list
+                    voice_data = {
                         'id': voice.get('voice_id', ''),
                         'name': voice.get('name', ''),
                         'description': voice.get('description', ''),
                         'gender': self._detect_gender(voice.get('name', ''), voice.get('labels', {})),
                         'accent': voice.get('labels', {}).get('accent', 'american'),
                         'age': voice.get('labels', {}).get('age', 'young adult'),
-                        'supported_languages': ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'it-IT'],
+                        'supported_languages': comprehensive_languages,
                         'preview_url': voice.get('preview_url', ''),
                         'category': voice.get('category', 'premade')
-                    })
+                    }
+                    
+                    # Filter voices that support the requested language
+                    if language_code in comprehensive_languages:
+                        voices.append(voice_data)
                 
                 return voices
             
@@ -106,7 +113,7 @@ class ElevenLabsTTS:
             print(f"Failed to get ElevenLabs voices: {e}")
         
         # Return fallback voices
-        return self._get_fallback_voices()
+        return self._get_fallback_voices(language_code)
     
     def _detect_gender(self, name: str, labels: Dict) -> str:
         """Detect gender from voice name and labels"""
@@ -126,9 +133,23 @@ class ElevenLabsTTS:
         
         return 'unknown'
     
-    def _get_fallback_voices(self) -> List[Dict]:
+    def _get_comprehensive_languages(self) -> List[str]:
+        """Get comprehensive language support from config"""
+        try:
+            # Always read from config to follow DRY principle
+            if hasattr(self, 'config') and 'supported_languages' in self.config:
+                return self.config['supported_languages']
+        except:
+            pass
+        
+        # Fallback to basic languages if config loading fails
+        return ["en-US", "en-GB"]
+
+    def _get_fallback_voices(self, language_code: str = 'en-US') -> List[Dict]:
         """Get fallback voices when API call fails"""
-        return [
+        comprehensive_languages = self._get_comprehensive_languages()
+        
+        fallback_voices = [
             {
                 'id': '21m00Tcm4TlvDq8ikWAM',
                 'name': 'Rachel',
@@ -136,7 +157,7 @@ class ElevenLabsTTS:
                 'gender': 'female',
                 'accent': 'american',
                 'age': 'young adult',
-                'supported_languages': ['en-US'],
+                'supported_languages': comprehensive_languages,
                 'category': 'premade'
             },
             {
@@ -146,7 +167,7 @@ class ElevenLabsTTS:
                 'gender': 'male',
                 'accent': 'american',
                 'age': 'young',
-                'supported_languages': ['en-US'],
+                'supported_languages': comprehensive_languages,
                 'category': 'premade'
             },
             {
@@ -156,10 +177,17 @@ class ElevenLabsTTS:
                 'gender': 'female',
                 'accent': 'american',
                 'age': 'young',
-                'supported_languages': ['en-US'],
+                'supported_languages': comprehensive_languages,
                 'category': 'premade'
             }
         ]
+        
+        # Filter fallback voices by requested language
+        if language_code in comprehensive_languages:
+            return fallback_voices
+        else:
+            # If language not supported, return empty list
+            return []
     
     def synthesize_speech(self, text: str, voice_id: str, language_code: str = 'en-US',
                          audio_format: str = 'mp3', speed: float = 1.0) -> Dict:
