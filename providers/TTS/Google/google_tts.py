@@ -1,9 +1,8 @@
 import json
 import time
 import base64
+import requests
 from typing import List, Dict, Optional
-from google.cloud import texttospeech
-from google.oauth2 import service_account
 import sys
 import os
 # Add TTS base provider to path
@@ -15,30 +14,86 @@ except ImportError:
     BaseTTSProvider = object
 
 class GoogleTTS:
-    """Google Cloud Text-to-Speech provider"""
+    """Google Cloud Text-to-Speech provider using REST API"""
     
     def __init__(self, config: dict, api_key: str = None):
         self.config = config
         self.api_key = api_key
         self.provider_name = config['provider']['name']
-        self.client = None
-        self._initialize_client()
+        self.base_url = "https://texttospeech.googleapis.com/v1"
+        self.access_token = None
+        self._initialize_auth()
     
-    def _initialize_client(self):
-        """Initialize Google Cloud TTS client"""
+    def _initialize_auth(self):
+        """Initialize Google Cloud TTS authentication using REST API"""
         try:
+            if not self.api_key:
+                print("Google TTS: No API key provided")
+                self.access_token = None
+                return
+                
             # Parse service account key from API key
             if self.api_key.startswith('{'):
                 # JSON service account key
-                service_account_info = json.loads(self.api_key)
-                credentials = service_account.Credentials.from_service_account_info(service_account_info)
-                self.client = texttospeech.TextToSpeechClient(credentials=credentials)
+                try:
+                    service_account_info = json.loads(self.api_key)
+                    self.access_token = self._get_access_token_from_service_account(service_account_info)
+                    if self.access_token:
+                        print("Google TTS: Successfully authenticated with service account credentials")
+                    else:
+                        print("Google TTS: Failed to get access token from service account")
+                except json.JSONDecodeError as e:
+                    print(f"Google TTS: Invalid JSON in service account key: {e}")
+                    self.access_token = None
+                except Exception as e:
+                    print(f"Google TTS: Failed to authenticate with service account key: {e}")
+                    self.access_token = None
             else:
-                # Try default credentials or API key
-                self.client = texttospeech.TextToSpeechClient()
+                # Treat as direct API key
+                print("Google TTS: Using API key for authentication")
+                self.access_token = self.api_key
         except Exception as e:
-            print(f"Failed to initialize Google TTS client: {e}")
-            self.client = None
+            print(f"Failed to initialize Google TTS authentication: {e}")
+            self.access_token = None
+    
+    def _get_access_token_from_service_account(self, service_account_info: dict) -> str:
+        """Get OAuth2 access token from service account credentials"""
+        try:
+            import jwt
+            import time
+            
+            # Create JWT assertion
+            now = int(time.time())
+            payload = {
+                'iss': service_account_info['client_email'],
+                'scope': 'https://www.googleapis.com/auth/cloud-platform',
+                'aud': 'https://oauth2.googleapis.com/token',
+                'iat': now,
+                'exp': now + 3600  # 1 hour expiry
+            }
+            
+            # Sign the JWT
+            private_key = service_account_info['private_key']
+            token = jwt.encode(payload, private_key, algorithm='RS256')
+            
+            # Exchange JWT for access token
+            response = requests.post('https://oauth2.googleapis.com/token', data={
+                'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion': token
+            })
+            
+            if response.status_code == 200:
+                return response.json().get('access_token')
+            else:
+                print(f"Failed to get access token: {response.status_code} - {response.text}")
+                return None
+                
+        except ImportError:
+            print("PyJWT library not available, falling back to API key method")
+            return None
+        except Exception as e:
+            print(f"Error getting access token: {e}")
+            return None
     
     def get_available_models(self) -> List[Dict]:
         """Get available TTS models from Google"""
@@ -66,47 +121,79 @@ class GoogleTTS:
             }
         ]
     
-    def get_available_voices(self, language_code: str = 'en-US') -> List[Dict]:
-        """Get available voices for Google TTS"""
-        if not self.client:
-            return self._get_fallback_voices(language_code)
+    def get_available_voices(self, language_code: str = 'en-US', model_filter: str = None) -> List[Dict]:
+        """Get available voices for Google TTS using REST API, optionally filtered by model type"""
+        if not self.access_token:
+            return self._get_fallback_voices(language_code, model_filter)
         
         try:
-            # Get list of available voices
-            voices_response = self.client.list_voices()
+            # Get list of available voices via REST API
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
             
-            # Get comprehensive language support from config
-            comprehensive_languages = self._get_comprehensive_languages()
+            # If access_token looks like an API key (not JWT), use key parameter instead
+            if len(self.access_token) < 100:  # API keys are shorter than JWT tokens
+                url = f"{self.base_url}/voices?key={self.access_token}"
+                headers = {'Content-Type': 'application/json'}
+            else:
+                url = f"{self.base_url}/voices"
             
-            voices = []
-            for voice in voices_response.voices:
-                # Check if voice supports the requested language (from API) OR if the language is in comprehensive list
-                if language_code in voice.language_codes or language_code in comprehensive_languages:
-                    voice_type = 'Neural2' if 'Neural2' in voice.name else 'WaveNet' if 'Wavenet' in voice.name else 'Standard'
-                    gender = 'male' if voice.ssml_gender == texttospeech.SsmlVoiceGender.MALE else 'female'
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                voices_data = response.json()
+                
+                # Get comprehensive language support from config
+                comprehensive_languages = self._get_comprehensive_languages()
+                
+                voices = []
+                for voice in voices_data.get('voices', []):
+                    # Check if voice supports the requested language
+                    voice_language_codes = voice.get('languageCodes', [])
                     
-                    # Enhance language codes with comprehensive support
-                    enhanced_language_codes = list(set(list(voice.language_codes) + comprehensive_languages))
+                    # Only include voices that actually support the requested language
+                    if language_code not in voice_language_codes:
+                        continue
+                    
+                    voice_name = voice.get('name', '')
+                    voice_type = 'Neural2' if 'Neural2' in voice_name else 'WaveNet' if 'Wavenet' in voice_name else 'Standard'
+                    
+                    # Filter voices by model type if specified
+                    if model_filter:
+                        expected_type = model_filter.lower()
+                        if expected_type == 'neural2' and 'Neural2' not in voice_name:
+                            continue
+                        elif expected_type == 'wavenet' and 'Wavenet' not in voice_name:
+                            continue
+                        elif expected_type == 'standard' and ('Neural2' in voice_name or 'Wavenet' in voice_name):
+                            continue
+                    
+                    # Determine gender from SSML gender
+                    ssml_gender = voice.get('ssmlGender', 'NEUTRAL')
+                    gender = 'male' if ssml_gender == 'MALE' else 'female' if ssml_gender == 'FEMALE' else 'neutral'
                     
                     voice_data = {
-                        'id': voice.name,
-                        'name': voice.name,
+                        'id': voice_name,
+                        'name': voice_name,
                         'description': f'{voice_type} {gender} voice',
                         'gender': gender,
-                        'language_codes': enhanced_language_codes,
-                        'supported_languages': enhanced_language_codes,  # Add this for consistency
+                        'language_codes': voice_language_codes,  # Use actual language codes only
+                        'supported_languages': voice_language_codes,  # Use actual language codes only
                         'voice_type': voice_type.lower()
                     }
                     
-                    # Only add voice if it supports the requested language
-                    if language_code in enhanced_language_codes:
-                        voices.append(voice_data)
-            
-            return voices
+                    voices.append(voice_data)
+                
+                return voices
+            else:
+                print(f"Failed to get Google TTS voices: HTTP {response.status_code} - {response.text}")
+                return self._get_fallback_voices(language_code, model_filter)
             
         except Exception as e:
             print(f"Failed to get Google TTS voices: {e}")
-            return self._get_fallback_voices(language_code)
+            return self._get_fallback_voices(language_code, model_filter)
     
     def _get_comprehensive_languages(self) -> List[str]:
         """Get comprehensive language support from config"""
@@ -120,28 +207,19 @@ class GoogleTTS:
         # Fallback to basic languages if config loading fails
         return ["en-US", "en-GB"]
 
-    def _get_fallback_voices(self, language_code: str) -> List[Dict]:
-        """Get fallback voices when API call fails"""
-        comprehensive_languages = self._get_comprehensive_languages()
+    def _get_fallback_voices(self, language_code: str, model_filter: str = None) -> List[Dict]:
+        """Get fallback voices when API call fails, optionally filtered by model type"""
         
-        # Enhanced fallback voices with comprehensive language support
-        fallback_voices = [
+        # Enhanced fallback voices with proper language-specific support
+        all_fallback_voices = [
+            # Neural2 voices
             {
                 'id': 'en-US-Neural2-A',
                 'name': 'en-US-Neural2-A',
                 'description': 'Neural2 female voice',
                 'gender': 'female',
-                'language_codes': comprehensive_languages,
-                'supported_languages': comprehensive_languages,
-                'voice_type': 'neural2'
-            },
-            {
-                'id': 'en-US-Neural2-C',
-                'name': 'en-US-Neural2-C',
-                'description': 'Neural2 female voice',
-                'gender': 'female',
-                'language_codes': comprehensive_languages,
-                'supported_languages': comprehensive_languages,
+                'language_codes': ['en-US', 'en-GB'],
+                'supported_languages': ['en-US', 'en-GB'],
                 'voice_type': 'neural2'
             },
             {
@@ -149,8 +227,8 @@ class GoogleTTS:
                 'name': 'hi-IN-Neural2-A',
                 'description': 'Neural2 female Hindi voice',
                 'gender': 'female',
-                'language_codes': comprehensive_languages,
-                'supported_languages': comprehensive_languages,
+                'language_codes': ['hi-IN'],
+                'supported_languages': ['hi-IN'],
                 'voice_type': 'neural2'
             },
             {
@@ -158,26 +236,101 @@ class GoogleTTS:
                 'name': 'hi-IN-Neural2-B',
                 'description': 'Neural2 male Hindi voice',
                 'gender': 'male',
-                'language_codes': comprehensive_languages,
-                'supported_languages': comprehensive_languages,
+                'language_codes': ['hi-IN'],
+                'supported_languages': ['hi-IN'],
                 'voice_type': 'neural2'
+            },
+            # WaveNet voices
+            {
+                'id': 'en-US-Wavenet-A',
+                'name': 'en-US-Wavenet-A',
+                'description': 'WaveNet female voice',
+                'gender': 'female',
+                'language_codes': ['en-US', 'en-GB'],
+                'supported_languages': ['en-US', 'en-GB'],
+                'voice_type': 'wavenet'
+            },
+            {
+                'id': 'hi-IN-Wavenet-A',
+                'name': 'hi-IN-Wavenet-A',
+                'description': 'WaveNet female Hindi voice',
+                'gender': 'female',
+                'language_codes': ['hi-IN'],
+                'supported_languages': ['hi-IN'],
+                'voice_type': 'wavenet'
+            },
+            {
+                'id': 'hi-IN-Wavenet-B',
+                'name': 'hi-IN-Wavenet-B',
+                'description': 'WaveNet male Hindi voice',
+                'gender': 'male',
+                'language_codes': ['hi-IN'],
+                'supported_languages': ['hi-IN'],
+                'voice_type': 'wavenet'
+            },
+            # Standard voices
+            {
+                'id': 'en-US-Standard-A',
+                'name': 'en-US-Standard-A',
+                'description': 'Standard female voice',
+                'gender': 'female',
+                'language_codes': ['en-US', 'en-GB'],
+                'supported_languages': ['en-US', 'en-GB'],
+                'voice_type': 'standard'
+            },
+            {
+                'id': 'hi-IN-Standard-A',
+                'name': 'hi-IN-Standard-A',
+                'description': 'Standard female Hindi voice',
+                'gender': 'female',
+                'language_codes': ['hi-IN'],
+                'supported_languages': ['hi-IN'],
+                'voice_type': 'standard'
+            },
+            {
+                'id': 'hi-IN-Standard-B',
+                'name': 'hi-IN-Standard-B',
+                'description': 'Standard male Hindi voice',
+                'gender': 'male',
+                'language_codes': ['hi-IN'],
+                'supported_languages': ['hi-IN'],
+                'voice_type': 'standard'
             }
         ]
         
-        # Filter fallback voices by requested language
-        if language_code in comprehensive_languages:
-            return fallback_voices
-        else:
-            # If language not supported, return empty list
-            return []
+        # Filter by model type if specified
+        filtered_voices = all_fallback_voices
+        if model_filter:
+            expected_type = model_filter.lower()
+            filtered_voices = [voice for voice in all_fallback_voices if voice['voice_type'] == expected_type]
+        
+        # Filter fallback voices by actual language support
+        language_filtered_voices = []
+        for voice in filtered_voices:
+            # Check if the voice actually supports the requested language
+            if language_code in voice['language_codes']:
+                language_filtered_voices.append(voice)
+        
+        return language_filtered_voices
+    
+    def generate_speech(self, text: str, voice_id: str, model_id: str = 'standard', 
+                       language_code: str = 'en-US', audio_format: str = 'mp3', speed: float = 1.0) -> Dict:
+        """Generate speech using Google Cloud TTS API - main method called by backend"""
+        return self.synthesize_speech(text, voice_id, language_code, audio_format, speed)
     
     def synthesize_speech(self, text: str, voice_id: str, language_code: str = 'en-US',
                          audio_format: str = 'mp3', speed: float = 1.0) -> Dict:
-        """Synthesize speech using Google Cloud TTS"""
-        if not self.client:
+        """Synthesize speech using Google Cloud TTS REST API"""
+        if not self.access_token:
+            error_msg = 'Google TTS not authenticated. '
+            if not self.api_key:
+                error_msg += 'Please configure a Google Cloud API key or service account JSON key in the API Keys section.'
+            else:
+                error_msg += 'Please check your Google Cloud API credentials. Ensure the key has Text-to-Speech API permissions.'
+            
             return {
                 'success': False,
-                'error': 'Google TTS client not initialized',
+                'error': error_msg,
                 'audio_data': None,
                 'audio_size_bytes': 0,
                 'processing_time': 0.0
@@ -197,55 +350,90 @@ class GoogleTTS:
             
             start_time = time.time()
             
-            # Set up synthesis input
-            synthesis_input = texttospeech.SynthesisInput(text=text)
-            
-            # Configure voice
-            voice = texttospeech.VoiceSelectionParams(
-                language_code=language_code,
-                name=voice_id
-            )
-            
             # Configure audio format
             format_mapping = {
-                'mp3': texttospeech.AudioEncoding.MP3,
-                'wav': texttospeech.AudioEncoding.LINEAR16,
-                'ogg': texttospeech.AudioEncoding.OGG_OPUS
+                'mp3': 'MP3',
+                'wav': 'LINEAR16',
+                'ogg': 'OGG_OPUS'
             }
             
-            audio_config = texttospeech.AudioConfig(
-                audio_encoding=format_mapping.get(audio_format, texttospeech.AudioEncoding.MP3),
-                speaking_rate=speed
-            )
+            # Prepare request payload
+            payload = {
+                'input': {
+                    'text': text
+                },
+                'voice': {
+                    'languageCode': language_code,
+                    'name': voice_id
+                },
+                'audioConfig': {
+                    'audioEncoding': format_mapping.get(audio_format, 'MP3'),
+                    'speakingRate': speed
+                }
+            }
             
-            # Synthesize speech
-            response = self.client.synthesize_speech(
-                input=synthesis_input,
-                voice=voice,
-                audio_config=audio_config
-            )
+            # Set up headers and URL
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            
+            # If access_token looks like an API key (not JWT), use key parameter instead
+            if len(self.access_token) < 100:  # API keys are shorter than JWT tokens
+                url = f"{self.base_url}/text:synthesize?key={self.access_token}"
+            else:
+                url = f"{self.base_url}/text:synthesize"
+                headers['Authorization'] = f'Bearer {self.access_token}'
+            
+            # Make API request
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
             
             end_time = time.time()
             processing_time = end_time - start_time
             
-            audio_data = response.audio_content
-            audio_size = len(audio_data)
-            
-            # Estimate audio duration
-            words = len(text.split())
-            estimated_duration = (words / 150) * 60 / speed
-            
-            return {
-                'success': True,
-                'audio_data': audio_data,
-                'audio_size_bytes': audio_size,
-                'audio_duration': estimated_duration,
-                'processing_time': processing_time,
-                'voice_used': voice_id,
-                'format': audio_format,
-                'text_length': len(text),
-                'error': None
-            }
+            if response.status_code == 200:
+                response_data = response.json()
+                
+                # Get audio content (it's base64 encoded in the response)
+                audio_base64 = response_data.get('audioContent', '')
+                audio_data = base64.b64decode(audio_base64)
+                audio_size = len(audio_data)
+                
+                # Create data URL for immediate playback
+                audio_url = f"data:audio/{audio_format};base64,{audio_base64}"
+                
+                # Estimate audio duration
+                words = len(text.split())
+                estimated_duration = (words / 150) * 60 / speed
+                
+                return {
+                    'success': True,
+                    'audio_data': audio_data,
+                    'audio_url': audio_url,
+                    'audio_size_bytes': audio_size,
+                    'audio_duration': estimated_duration,
+                    'processing_time': processing_time,
+                    'voice_used': voice_id,
+                    'format': audio_format,
+                    'text_length': len(text),
+                    'character_count': len(text),
+                    'error': None
+                }
+            else:
+                error_msg = f"HTTP {response.status_code}: {response.text}"
+                try:
+                    error_data = response.json()
+                    if 'error' in error_data:
+                        error_msg = error_data['error'].get('message', error_msg)
+                except:
+                    pass
+                
+                return {
+                    'success': False,
+                    'error': error_msg,
+                    'audio_data': None,
+                    'audio_size_bytes': 0,
+                    'processing_time': processing_time
+                }
             
         except Exception as e:
             return {
@@ -257,31 +445,51 @@ class GoogleTTS:
             }
     
     def get_service_status(self) -> Dict:
-        """Check Google TTS service status"""
-        if not self.client:
+        """Check Google TTS service status using REST API"""
+        if not self.access_token:
             return {
                 'service_available': False,
-                'status': 'Client not initialized',
-                'error': 'Failed to initialize Google Cloud TTS client'
+                'status': 'Not authenticated',
+                'error': 'Google TTS authentication not configured'
             }
         
         try:
             # Test with a simple voices list call
-            response = self.client.list_voices()
-            
-            return {
-                'service_available': True,
-                'status': 'Active',
-                'available_voices': len(response.voices),
-                'client_initialized': True
+            headers = {
+                'Content-Type': 'application/json'
             }
+            
+            # If access_token looks like an API key, use key parameter
+            if len(self.access_token) < 100:
+                url = f"{self.base_url}/voices?key={self.access_token}"
+            else:
+                url = f"{self.base_url}/voices"
+                headers['Authorization'] = f'Bearer {self.access_token}'
+            
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                voices_data = response.json()
+                return {
+                    'service_available': True,
+                    'status': 'Active',
+                    'available_voices': len(voices_data.get('voices', [])),
+                    'authenticated': True
+                }
+            else:
+                return {
+                    'service_available': False,
+                    'status': f'HTTP {response.status_code}',
+                    'error': response.text,
+                    'authenticated': bool(self.access_token)
+                }
             
         except Exception as e:
             return {
                 'service_available': False,
                 'status': 'Error',
                 'error': str(e),
-                'client_initialized': bool(self.client)
+                'authenticated': bool(self.access_token)
             }
     
     def is_service_available(self) -> bool:

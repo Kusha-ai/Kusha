@@ -237,6 +237,7 @@ class OpenAITTS:
                     'voice_used': voice_id,
                     'format': response_format,
                     'text_length': len(text),
+                    'character_count': len(text),
                     'error': None
                 }
             else:
@@ -317,8 +318,8 @@ class OpenAITTS:
         
         if not voice_id:
             errors.append("Voice ID is required")
-        elif voice_id not in ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']:
-            errors.append("Invalid voice ID. Supported: alloy, echo, fable, onyx, nova, shimmer")
+        elif voice_id not in ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'ash', 'ballad', 'coral', 'sage']:
+            errors.append("Invalid voice ID. Supported: alloy, echo, fable, onyx, nova, shimmer, ash, ballad, coral, sage")
         
         if audio_format not in ['mp3', 'opus', 'aac', 'flac', 'wav', 'ogg']:
             errors.append("Invalid audio format. Supported: mp3, opus, aac, flac, wav, ogg")

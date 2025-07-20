@@ -12,6 +12,7 @@ import { VolumeUp as VolumeUpIcon } from '@mui/icons-material'
 interface TTSTestRunnerProps {
   language: string
   models: string[]
+  selectedVoices: Record<string, string>
   text: string
   onResults: (results: any[]) => void
   isLoading: boolean
@@ -21,6 +22,7 @@ interface TTSTestRunnerProps {
 const TTSTestRunner: React.FC<TTSTestRunnerProps> = ({
   language,
   models,
+  selectedVoices,
   text,
   onResults,
   isLoading,
@@ -37,19 +39,33 @@ const TTSTestRunner: React.FC<TTSTestRunnerProps> = ({
 
         // Process each selected model
         for (const modelId of models) {
-          const [providerId, modelName] = modelId.split('-', 2)
+          // Parse the model ID - handle provider IDs that contain dashes
+          // Model ID format: {provider.id}-{model.id}
+          // Known provider IDs: elevenlabs-tts, openai-tts, google-tts
+          let providerId = ''
+          let modelName = ''
+          
+          if (modelId.startsWith('elevenlabs-tts-')) {
+            providerId = 'elevenlabs-tts'
+            modelName = modelId.substring('elevenlabs-tts-'.length)
+          } else if (modelId.startsWith('openai-tts-')) {
+            providerId = 'openai-tts'
+            modelName = modelId.substring('openai-tts-'.length)
+          } else if (modelId.startsWith('google-tts-')) {
+            providerId = 'google-tts'
+            modelName = modelId.substring('google-tts-'.length)
+          } else {
+            // Fallback to old logic for other providers
+            const parts = modelId.split('-')
+            providerId = parts[0]
+            modelName = parts.slice(1).join('-')
+          }
           
           try {
-            // Fetch voices for this provider and language
-            const voicesResponse = await fetch(`/api/tts/voices?provider=${providerId}&language=${language}`)
-            if (!voicesResponse.ok) {
-              throw new Error(`Failed to fetch voices: ${voicesResponse.statusText}`)
-            }
+            // Get the selected voice for this model
+            const selectedVoiceId = selectedVoices[modelId]
             
-            const voicesData = await voicesResponse.json()
-            const voices = voicesData.voices || []
-            
-            if (voices.length === 0) {
+            if (!selectedVoiceId) {
               results.push({
                 success: false,
                 provider: providerId,
@@ -58,12 +74,12 @@ const TTSTestRunner: React.FC<TTSTestRunnerProps> = ({
                 audio_url: '',
                 processing_time: 0,
                 character_count: text.length,
-                error: 'No voices available for this model/language combination'
+                error: 'No voice selected for this model'
               })
               continue
             }
 
-            // Generate audio for all voices of this model
+            // Generate audio for the selected voice only
             const generateResponse = await fetch('/api/tts/generate', {
               method: 'POST',
               headers: {
@@ -74,7 +90,7 @@ const TTSTestRunner: React.FC<TTSTestRunnerProps> = ({
                 language: language,
                 provider: providerId,
                 model: modelName,
-                voices: voices.map((v: any) => v.id), // Use all voices
+                voices: [selectedVoiceId], // Use only the selected voice
               }),
             })
 
@@ -123,7 +139,7 @@ const TTSTestRunner: React.FC<TTSTestRunnerProps> = ({
     }
 
     runTTSTests()
-  }, [language, models, text, isLoading, onResults, setIsLoading])
+  }, [language, models, selectedVoices, text, isLoading, onResults, setIsLoading])
 
   if (!isLoading) {
     return null
@@ -145,7 +161,7 @@ const TTSTestRunner: React.FC<TTSTestRunnerProps> = ({
           </Box>
           
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Testing {models.length} model{models.length !== 1 ? 's' : ''} with multiple voices for language: {language}
+            Testing {models.length} model{models.length !== 1 ? 's' : ''} with selected voices for language: {language}
           </Typography>
           
           <LinearProgress 
@@ -175,8 +191,8 @@ const TTSTestRunner: React.FC<TTSTestRunnerProps> = ({
           <strong>What's happening:</strong>
         </Typography>
         <Typography variant="body2" sx={{ mt: 1 }}>
-          • Fetching available voices for each selected model<br/>
-          • Generating audio samples for all voice variants<br/>
+          • Using your selected voice for each model<br/>
+          • Generating audio samples with chosen voices<br/>
           • Measuring processing times and audio quality<br/>
           • Preparing results for comparison
         </Typography>

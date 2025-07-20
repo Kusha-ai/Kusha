@@ -1374,27 +1374,84 @@ async def get_tts_models(provider: str, language: str):
         raise HTTPException(status_code=500, detail=f"Failed to load TTS models: {str(e)}")
 
 @app.get("/api/tts/voices")
-async def get_tts_voices(provider: str, language: str):
-    """Get TTS voices for a specific provider and language"""
+async def get_tts_voices(provider: str, language: str, model: str = None):
+    """Get TTS voices for a specific provider and language, optionally filtered by model"""
     try:
         provider_config = provider_manager.get_provider_config(provider)
         if not provider_config:
             raise HTTPException(status_code=404, detail="Provider not found")
         
-        voices = []
-        for voice in provider_config.get('voices', []):
-            if language in voice.get('supported_languages', []):
+        # Get API key for provider
+        api_key = provider_manager.get_cached_api_key(provider)
+        if not api_key:
+            api_key = db.get_api_key(provider)
+            if api_key:
+                provider_manager.cache_api_key(provider, api_key)
+        
+        # Check if API key is required
+        if provider_config['provider']['requires_api_key'] and not api_key:
+            # Return fallback voices if no API key but provider supports static voices
+            if provider_config.get('voices'):
+                voices = []
+                for voice in provider_config.get('voices', []):
+                    if language in voice.get('supported_languages', []):
+                        voices.append({
+                            'id': voice['id'],
+                            'name': voice['name'],
+                            'description': voice.get('description', ''),
+                            'gender': voice.get('gender', 'unknown'),
+                            'accent': voice.get('accent', ''),
+                            'age': voice.get('age', ''),
+                            'supported_languages': voice.get('supported_languages', [])
+                        })
+                return {"voices": voices}
+            else:
+                raise HTTPException(status_code=400, detail="API key required for this provider")
+        
+        # Get provider instance and call its get_available_voices method
+        provider_instance = provider_manager.get_provider_instance(provider, api_key)
+        if not provider_instance:
+            raise HTTPException(status_code=500, detail="Failed to create provider instance")
+        
+        # Call provider's get_available_voices method with model filter if supported
+        if hasattr(provider_instance, 'get_available_voices'):
+            # Check if provider supports model filtering
+            import inspect
+            sig = inspect.signature(provider_instance.get_available_voices)
+            if 'model_filter' in sig.parameters:
+                voices_data = provider_instance.get_available_voices(language, model_filter=model)
+            else:
+                voices_data = provider_instance.get_available_voices(language)
+            
+            # Transform provider response to API format
+            voices = []
+            for voice in voices_data:
                 voices.append({
-                    'id': voice['id'],
-                    'name': voice['name'],
+                    'id': voice.get('id', voice.get('name', '')),
+                    'name': voice.get('name', voice.get('id', '')),
                     'description': voice.get('description', ''),
                     'gender': voice.get('gender', 'unknown'),
                     'accent': voice.get('accent', ''),
                     'age': voice.get('age', ''),
-                    'supported_languages': voice.get('supported_languages', [])
+                    'supported_languages': voice.get('supported_languages', voice.get('language_codes', []))
                 })
+            return {"voices": voices}
+        else:
+            # Fallback to config-based voices
+            voices = []
+            for voice in provider_config.get('voices', []):
+                if language in voice.get('supported_languages', []):
+                    voices.append({
+                        'id': voice['id'],
+                        'name': voice['name'],
+                        'description': voice.get('description', ''),
+                        'gender': voice.get('gender', 'unknown'),
+                        'accent': voice.get('accent', ''),
+                        'age': voice.get('age', ''),
+                        'supported_languages': voice.get('supported_languages', [])
+                    })
+            return {"voices": voices}
         
-        return {"voices": voices}
     except HTTPException:
         raise
     except Exception as e:

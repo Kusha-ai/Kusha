@@ -189,6 +189,11 @@ class ElevenLabsTTS:
             # If language not supported, return empty list
             return []
     
+    def generate_speech(self, text: str, voice_id: str, model_id: str = 'eleven_multilingual_v2', 
+                       language_code: str = 'en-US', audio_format: str = 'mp3', speed: float = 1.0) -> Dict:
+        """Generate speech using ElevenLabs TTS API - main method called by backend"""
+        return self.synthesize_speech(text, voice_id, language_code, audio_format, speed)
+    
     def synthesize_speech(self, text: str, voice_id: str, language_code: str = 'en-US',
                          audio_format: str = 'mp3', speed: float = 1.0) -> Dict:
         """Synthesize speech using ElevenLabs TTS API"""
@@ -240,6 +245,11 @@ class ElevenLabsTTS:
                 audio_data = response.content
                 audio_size = len(audio_data)
                 
+                # Create data URL for immediate playback (for compatibility with frontend)
+                import base64
+                audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                audio_url = f"data:audio/{audio_format};base64,{audio_base64}"
+                
                 # Estimate audio duration
                 words = len(text.split())
                 estimated_duration = (words / 150) * 60 / speed
@@ -247,6 +257,7 @@ class ElevenLabsTTS:
                 return {
                     'success': True,
                     'audio_data': audio_data,
+                    'audio_url': audio_url,
                     'audio_size_bytes': audio_size,
                     'audio_duration': estimated_duration,
                     'processing_time': processing_time,
@@ -254,6 +265,7 @@ class ElevenLabsTTS:
                     'voice_used': voice_id,
                     'format': audio_format,
                     'text_length': len(text),
+                    'character_count': len(text),
                     'error': None
                 }
             else:

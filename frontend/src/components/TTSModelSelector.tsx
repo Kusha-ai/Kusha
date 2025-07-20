@@ -16,6 +16,10 @@ import {
   CircularProgress,
   Alert,
   Button,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
 } from '@mui/material'
 import {
   Search as SearchIcon,
@@ -54,6 +58,8 @@ interface TTSModelSelectorProps {
   providers: any[]
   selectedModels: string[]
   onModelChange: (models: string[]) => void
+  selectedVoices: Record<string, string>
+  onVoiceChange: (modelId: string, voiceId: string) => void
   disabled: boolean
 }
 
@@ -68,6 +74,8 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
   providers,
   selectedModels,
   onModelChange,
+  selectedVoices,
+  onVoiceChange,
   disabled
 }) => {
   const [models, setModels] = useState<TTSModel[]>([])
@@ -92,28 +100,47 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
           const modelsResponse = await fetch(`/api/tts/models?provider=${provider.id}&language=${language}`)
           if (modelsResponse.ok) {
             const modelsData = await modelsResponse.json()
-            
-            // Fetch voices
-            const voicesResponse = await fetch(`/api/tts/voices?provider=${provider.id}&language=${language}`)
-            const voicesData = voicesResponse.ok ? await voicesResponse.json() : { voices: [] }
 
-            // Combine models with voices
-            modelsData.models.forEach((model: any) => {
-              allModels.push({
-                id: `${provider.id}-${model.id}`,
-                name: model.name,
-                provider_id: provider.id,
-                provider_name: provider.name || provider.id, // Fix: use fallback if name is undefined
-                provider_icon_url: provider.icon_url || '',
-                provider_logo_url: provider.logo_url || '',
-                description: model.description,
-                features: model.features || [],
-                hasApiKey: true, // Assume true if provider is activated
-                isActivated: true,
-                voices: voicesData.voices || [],
-                max_characters: model.max_characters
-              })
-            })
+            // Fetch voices for each model separately
+            for (const model of modelsData.models) {
+              try {
+                // Fetch voices specific to this model
+                const voicesResponse = await fetch(`/api/tts/voices?provider=${provider.id}&language=${language}&model=${model.id}`)
+                const voicesData = voicesResponse.ok ? await voicesResponse.json() : { voices: [] }
+
+                allModels.push({
+                  id: `${provider.id}-${model.id}`,
+                  name: model.name,
+                  provider_id: provider.id,
+                  provider_name: provider.name || provider.id, // Fix: use fallback if name is undefined
+                  provider_icon_url: provider.icon_url || '',
+                  provider_logo_url: provider.logo_url || '',
+                  description: model.description,
+                  features: model.features || [],
+                  hasApiKey: true, // Assume true if provider is activated
+                  isActivated: true,
+                  voices: voicesData.voices || [],
+                  max_characters: model.max_characters
+                })
+              } catch (err) {
+                console.error(`Error fetching voices for model ${model.id}:`, err)
+                // Add model with empty voices if voice fetching fails
+                allModels.push({
+                  id: `${provider.id}-${model.id}`,
+                  name: model.name,
+                  provider_id: provider.id,
+                  provider_name: provider.name || provider.id,
+                  provider_icon_url: provider.icon_url || '',
+                  provider_logo_url: provider.logo_url || '',
+                  description: model.description,
+                  features: model.features || [],
+                  hasApiKey: true,
+                  isActivated: true,
+                  voices: [],
+                  max_characters: model.max_characters
+                })
+              }
+            }
           }
         } catch (err) {
           console.error(`Error fetching models for ${provider.name || provider.id}:`, err)
@@ -133,9 +160,16 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
   }, [language, providers])
 
   const handleModelToggle = (modelId: string) => {
+    const model = models.find(m => m.id === modelId)
     const newSelectedModels = selectedModels.includes(modelId)
       ? selectedModels.filter(id => id !== modelId)
       : [...selectedModels, modelId]
+    
+    // If selecting a model and it has voices, set the first voice as default
+    if (!selectedModels.includes(modelId) && model && model.voices.length > 0 && !selectedVoices[modelId]) {
+      onVoiceChange(modelId, model.voices[0].id)
+    }
+    
     onModelChange(newSelectedModels)
   }
 
@@ -153,6 +187,11 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
       providerModelIds.forEach(id => {
         if (!newSelectedModels.includes(id)) {
           newSelectedModels.push(id)
+          // Set default voice for newly selected models
+          const model = providerModels.find(m => m.id === id)
+          if (model && model.voices.length > 0 && !selectedVoices[id]) {
+            onVoiceChange(id, model.voices[0].id)
+          }
         }
       })
       onModelChange(newSelectedModels)
@@ -244,7 +283,16 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           <Button 
             size="small" 
-            onClick={() => onModelChange(filteredModels.map(m => m.id))}
+            onClick={() => {
+              const modelIds = filteredModels.map(m => m.id)
+              onModelChange(modelIds)
+              // Set default voice for each newly selected model
+              filteredModels.forEach(model => {
+                if (!selectedModels.includes(model.id) && model.voices.length > 0 && !selectedVoices[model.id]) {
+                  onVoiceChange(model.id, model.voices[0].id)
+                }
+              })
+            }}
             disabled={filteredModels.length === 0}
           >
             Select All Models
@@ -382,29 +430,67 @@ const TTSModelSelector: React.FC<TTSModelSelectorProps> = ({
                         </Box>
                       )}
                       
-                      {/* Voices */}
+                      {/* Voice Selection */}
                       <Box>
                         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                          Available Voices ({model.voices.length}):
+                          Voice Selection ({model.voices.length} available):
                         </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {model.voices.slice(0, 4).map((voice) => (
-                            <Chip
-                              key={voice.id}
-                              label={`${voice.name} (${voice.gender})`}
-                              size="small"
-                              color="primary"
-                              variant="outlined"
-                            />
-                          ))}
-                          {model.voices.length > 4 && (
-                            <Chip
-                              label={`+${model.voices.length - 4} more`}
-                              size="small"
-                              variant="outlined"
-                            />
-                          )}
-                        </Box>
+                        {model.voices.length > 0 ? (
+                          <FormControl size="small" sx={{ minWidth: 200, mb: 1 }}>
+                            <InputLabel>Select Voice</InputLabel>
+                            <Select
+                              value={selectedVoices[model.id] || (model.voices.length > 0 ? model.voices[0].id : '')}
+                              label="Select Voice"
+                              onChange={(e) => onVoiceChange(model.id, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {model.voices.map((voice) => (
+                                <MenuItem key={voice.id} value={voice.id}>
+                                  <Box>
+                                    <Typography variant="body2" fontWeight="500">
+                                      {voice.name}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {voice.gender} • {voice.accent || 'Default'} • {voice.age || 'N/A'}
+                                    </Typography>
+                                  </Box>
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        ) : (
+                          <Alert severity="warning" sx={{ mt: 1 }}>
+                            No voices available for this model/language combination
+                          </Alert>
+                        )}
+                        
+                        {/* Show other available voices as chips for reference */}
+                        {model.voices.length > 1 && (
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                              Other available voices:
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {model.voices.filter(v => v.id !== selectedVoices[model.id]).slice(0, 3).map((voice) => (
+                                <Chip
+                                  key={voice.id}
+                                  label={`${voice.name} (${voice.gender})`}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ fontSize: '0.7rem' }}
+                                />
+                              ))}
+                              {model.voices.filter(v => v.id !== selectedVoices[model.id]).length > 3 && (
+                                <Chip
+                                  label={`+${model.voices.filter(v => v.id !== selectedVoices[model.id]).length - 3} more`}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ fontSize: '0.7rem' }}
+                                />
+                              )}
+                            </Box>
+                          </Box>
+                        )}
                       </Box>
                     </Paper>
                   ))}

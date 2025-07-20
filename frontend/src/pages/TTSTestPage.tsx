@@ -28,6 +28,7 @@ import { useTTSData } from '../hooks/useTTSData'
 const TTSTestPage: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('')
   const [selectedModels, setSelectedModels] = useState<string[]>([])
+  const [selectedVoices, setSelectedVoices] = useState<Record<string, string>>({})
   const [inputText, setInputText] = useState('Hello, this is a test of text-to-speech synthesis. How does it sound?')
   const [testResults, setTestResults] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -45,6 +46,13 @@ const TTSTestPage: React.FC = () => {
 
   const handleModelChange = (models: string[]) => {
     setSelectedModels(models)
+  }
+
+  const handleVoiceChange = (modelId: string, voiceId: string) => {
+    setSelectedVoices(prev => ({
+      ...prev,
+      [modelId]: voiceId
+    }))
   }
 
   const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -246,6 +254,8 @@ const TTSTestPage: React.FC = () => {
                 providers={providers}
                 selectedModels={selectedModels}
                 onModelChange={handleModelChange}
+                selectedVoices={selectedVoices}
+                onVoiceChange={handleVoiceChange}
                 disabled={!selectedLanguage}
               />
               
@@ -382,6 +392,7 @@ const TTSTestPage: React.FC = () => {
               <TTSTestRunner
                 language={selectedLanguage}
                 models={selectedModels}
+                selectedVoices={selectedVoices}
                 text={inputText}
                 onResults={setTestResults}
                 isLoading={isLoading}

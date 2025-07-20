@@ -11,6 +11,10 @@ google-cloud-speech==2.21.0
 elevenlabs==0.2.26
 openai==1.3.0
 
+# TTS Provider dependencies
+google-cloud-texttospeech==2.16.3
+PyJWT==2.8.0
+
 # Analytics and reporting
 elasticsearch==8.11.0
 python-jose[cryptography]==3.3.0
