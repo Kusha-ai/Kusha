@@ -6,23 +6,97 @@
     "base_url": "https://texttospeech.googleapis.com/v1",
     "requires_api_key": true,
     "api_key_type": "google_cloud",
+    "provider_type": "TTS",
     "icon_url": "https://www.gstatic.com/cloud/images/favicons/onecloud/super_cloud.png",
     "logo_url": "https://cloud.google.com/images/social-icon-google-cloud-1200-630.png"
   },
   "models": [
     {
-      "id": "neural2-en-us-journey-d",
-      "name": "Journey Voice (Neural2)",
-      "description": "High-quality neural voice optimized for conversations",
-      "supported_languages": ["en-US"],
-      "features": ["Neural", "Conversational", "High-quality"]
+      "id": "neural2",
+      "name": "Neural2 (Latest)",
+      "description": "Latest high-quality neural voices with natural intonation",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN"],
+      "features": ["Neural", "High-quality", "Natural intonation"]
     },
     {
-      "id": "standard-en-us-wavenet-d",
-      "name": "WaveNet Standard",
-      "description": "Standard WaveNet voice with good quality",
-      "supported_languages": ["en-US"],
-      "features": ["WaveNet", "Standard", "Cost-effective"]
+      "id": "wavenet",
+      "name": "WaveNet",
+      "description": "Premium quality WaveNet voices with human-like speech",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN"],
+      "features": ["WaveNet", "Premium", "Human-like"]
+    },
+    {
+      "id": "standard",
+      "name": "Standard",
+      "description": "Standard quality voices, cost-effective",
+      "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN"],
+      "features": ["Standard", "Cost-effective", "Reliable"]
+    }
+  ],
+  "voices": [
+    {
+      "id": "en-US-Journey-D",
+      "name": "Journey (Female)",
+      "description": "Conversational female voice optimized for dialogue",
+      "gender": "female",
+      "accent": "american",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "en-US-Journey-F",
+      "name": "Journey (Male)",
+      "description": "Conversational male voice optimized for dialogue",
+      "gender": "male",
+      "accent": "american",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "en-US-Neural2-A",
+      "name": "Neural2 A (Male)",
+      "description": "High-quality neural male voice",
+      "gender": "male",
+      "accent": "american",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "en-US-Neural2-C",
+      "name": "Neural2 C (Female)",
+      "description": "High-quality neural female voice",
+      "gender": "female",
+      "accent": "american",
+      "supported_languages": ["en-US"]
+    },
+    {
+      "id": "hi-IN-Neural2-A",
+      "name": "Hindi Neural2 A (Female)",
+      "description": "High-quality Hindi female voice",
+      "gender": "female",
+      "accent": "indian",
+      "supported_languages": ["hi-IN"]
+    },
+    {
+      "id": "hi-IN-Neural2-B",
+      "name": "Hindi Neural2 B (Male)",
+      "description": "High-quality Hindi male voice",
+      "gender": "male",
+      "accent": "indian",
+      "supported_languages": ["hi-IN"]
+    },
+    {
+      "id": "en-GB-Neural2-A",
+      "name": "British Neural2 A (Female)",
+      "description": "High-quality British English female voice",
+      "gender": "female",
+      "accent": "british",
+      "supported_languages": ["en-GB"]
+    },
+    {
+      "id": "en-GB-Neural2-B",
+      "name": "British Neural2 B (Male)",
+      "description": "High-quality British English male voice",
+      "gender": "male",
+      "accent": "british",
+      "supported_languages": ["en-GB"]
     }
   ],
   "supported_languages": ["en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ja-JP", "ko-KR", "zh-CN", "hi-IN", "ar-SA"]

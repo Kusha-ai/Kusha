@@ -6,6 +6,7 @@
     "base_url": "https://api.elevenlabs.io/v1",
     "requires_api_key": true,
     "api_key_type": "xi-api-key",
+    "provider_type": "TTS",
     "icon_url": "https://elevenlabs.io/favicon.ico",
     "logo_url": "https://elevenlabs.io/logo.svg"
   },

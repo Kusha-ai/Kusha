@@ -1266,6 +1266,240 @@ async def test_provider_transcription(
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+# TTS API Endpoints
+@app.get("/api/tts/languages")
+async def get_tts_languages():
+    """Get all languages supported by TTS providers"""
+    try:
+        # Get all TTS providers
+        all_providers = provider_manager.get_all_providers()
+        tts_providers = [p for p in all_providers if p.get('provider_type') == 'TTS']
+        
+        # Collect supported languages from TTS providers
+        supported_languages = {}
+        for provider in tts_providers:
+            provider_id = provider['id']
+            provider_config = provider_manager.get_provider_config(provider_id)
+            
+            if provider_config:
+                for lang_code in provider_config.get('supported_languages', []):
+                    if lang_code not in supported_languages:
+                        supported_languages[lang_code] = []
+                    if provider_id not in supported_languages[lang_code]:
+                        supported_languages[lang_code].append(provider_id)
+        
+        # Build language list using centralized language pack
+        languages_list = []
+        for lang_code in supported_languages:
+            # Get language info from provider manager (uses language pack)
+            all_languages = provider_manager.get_all_languages()
+            lang_info = next((l for l in all_languages if l['code'] == lang_code), None)
+            
+            if lang_info:
+                languages_list.append({
+                    'code': lang_code,
+                    'name': lang_info['name'],
+                    'flag': lang_info['flag'],
+                    'region': lang_info['region'],
+                    'providers': supported_languages[lang_code]
+                })
+            else:
+                # Fallback for languages not in language pack
+                languages_list.append({
+                    'code': lang_code,
+                    'name': lang_code.upper(),
+                    'flag': '🌐',
+                    'region': 'Other',
+                    'providers': supported_languages[lang_code]
+                })
+        
+        # Sort by region (India first) then by name
+        languages_list.sort(key=lambda x: (x['region'] != 'India', x['region'], x['name']))
+        return {"languages": languages_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load TTS languages: {str(e)}")
+
+@app.get("/api/tts/providers")
+async def get_tts_providers():
+    """Get all TTS providers"""
+    try:
+        all_providers = provider_manager.get_all_providers()
+        tts_providers = []
+        
+        for provider in all_providers:
+            if provider.get('provider_type') == 'TTS':
+                # Check if provider is activated
+                provider_status = db.get_provider_status(provider['id'])
+                is_activated = provider_status.get('is_activated', False) if provider_status else False
+                
+                provider_info = {
+                    'id': provider['id'],
+                    'name': provider['name'],
+                    'description': provider.get('description', ''),
+                    'icon_url': provider.get('icon_url', ''),
+                    'logo_url': provider.get('logo_url', ''),
+                    'isActivated': is_activated
+                }
+                tts_providers.append(provider_info)
+        
+        return {"providers": tts_providers}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load TTS providers: {str(e)}")
+
+@app.get("/api/tts/models")
+async def get_tts_models(provider: str, language: str):
+    """Get TTS models for a specific provider and language"""
+    try:
+        provider_config = provider_manager.get_provider_config(provider)
+        if not provider_config:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        
+        models = []
+        for model in provider_config.get('models', []):
+            if language in model.get('supported_languages', []):
+                models.append({
+                    'id': model['id'],
+                    'name': model['name'],
+                    'description': model.get('description', ''),
+                    'max_characters': model.get('max_characters', 0),
+                    'supported_formats': model.get('supported_formats', []),
+                    'features': model.get('features', []),
+                    'supported_languages': model.get('supported_languages', [])
+                })
+        
+        return {"models": models}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load TTS models: {str(e)}")
+
+@app.get("/api/tts/voices")
+async def get_tts_voices(provider: str, language: str):
+    """Get TTS voices for a specific provider and language"""
+    try:
+        provider_config = provider_manager.get_provider_config(provider)
+        if not provider_config:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        
+        voices = []
+        for voice in provider_config.get('voices', []):
+            if language in voice.get('supported_languages', []):
+                voices.append({
+                    'id': voice['id'],
+                    'name': voice['name'],
+                    'description': voice.get('description', ''),
+                    'gender': voice.get('gender', 'unknown'),
+                    'accent': voice.get('accent', ''),
+                    'age': voice.get('age', ''),
+                    'supported_languages': voice.get('supported_languages', [])
+                })
+        
+        return {"voices": voices}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load TTS voices: {str(e)}")
+
+@app.post("/api/tts/generate")
+async def generate_tts_audio(request: Request):
+    """Generate TTS audio for multiple voices"""
+    try:
+        data = await request.json()
+        text = data.get('text', '').strip()
+        language = data.get('language', '')
+        provider_id = data.get('provider', '')
+        model_id = data.get('model', '')
+        voice_ids = data.get('voices', [])
+        
+        if not all([text, language, provider_id, model_id, voice_ids]):
+            raise HTTPException(status_code=400, detail="Missing required parameters")
+        
+        # Get API key for provider
+        api_key = provider_manager.get_cached_api_key(provider_id)
+        if not api_key:
+            api_key = db.get_api_key(provider_id)
+            if api_key:
+                provider_manager.cache_api_key(provider_id, api_key)
+        
+        provider_config = provider_manager.get_provider_config(provider_id)
+        if not provider_config:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        
+        if provider_config['provider']['requires_api_key'] and not api_key:
+            raise HTTPException(status_code=400, detail="API key required for this provider")
+        
+        # Get provider instance
+        provider_instance = provider_manager.get_provider_instance(provider_id, api_key)
+        
+        results = []
+        for voice_id in voice_ids:
+            try:
+                start_time = time.time()
+                
+                # Generate audio (this would need to be implemented in TTS providers)
+                if hasattr(provider_instance, 'generate_speech'):
+                    result = provider_instance.generate_speech(
+                        text=text,
+                        voice_id=voice_id,
+                        model_id=model_id,
+                        language_code=language
+                    )
+                    
+                    processing_time = (time.time() - start_time) * 1000
+                    
+                    if result.get('success'):
+                        results.append({
+                            'success': True,
+                            'provider': provider_config['provider']['name'],
+                            'model': model_id,
+                            'voice': voice_id,
+                            'audio_url': result.get('audio_url', ''),
+                            'processing_time': processing_time,
+                            'character_count': len(text),
+                            'cost': result.get('cost', 0)
+                        })
+                    else:
+                        results.append({
+                            'success': False,
+                            'provider': provider_config['provider']['name'],
+                            'model': model_id,
+                            'voice': voice_id,
+                            'audio_url': '',
+                            'processing_time': 0,
+                            'character_count': len(text),
+                            'error': result.get('error', 'Unknown error')
+                        })
+                else:
+                    results.append({
+                        'success': False,
+                        'provider': provider_config['provider']['name'],
+                        'model': model_id,
+                        'voice': voice_id,
+                        'audio_url': '',
+                        'processing_time': 0,
+                        'character_count': len(text),
+                        'error': 'TTS generation not implemented for this provider'
+                    })
+                    
+            except Exception as e:
+                results.append({
+                    'success': False,
+                    'provider': provider_config['provider']['name'],
+                    'model': model_id,
+                    'voice': voice_id,
+                    'audio_url': '',
+                    'processing_time': 0,
+                    'character_count': len(text),
+                    'error': str(e)
+                })
+        
+        return {"results": results}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate TTS audio: {str(e)}")
+
 # Catch-all route for React Router (SPA) - MUST be last!
 @app.get("/{path:path}", response_class=HTMLResponse)
 async def catch_all(path: str):

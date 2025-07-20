@@ -94,6 +94,11 @@ class OpenAITTS:
             }
         ]
     
+    def generate_speech(self, text: str, voice_id: str, model_id: str = 'tts-1', 
+                       language_code: str = 'en-US', audio_format: str = 'mp3', speed: float = 1.0) -> Dict:
+        """Generate speech using OpenAI TTS API - main method called by backend"""
+        return self.synthesize_speech(text, voice_id, language_code, audio_format, speed)
+    
     def synthesize_speech(self, text: str, voice_id: str, language_code: str = 'en-US',
                          audio_format: str = 'mp3', speed: float = 1.0) -> Dict:
         """Synthesize speech using OpenAI TTS API"""
@@ -147,6 +152,14 @@ class OpenAITTS:
                 audio_data = response.content
                 audio_size = len(audio_data)
                 
+                # Save audio to a temporary file and create URL
+                import tempfile
+                import base64
+                
+                # Create data URL for immediate playback (for small files)
+                audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                audio_url = f"data:audio/{response_format};base64,{audio_base64}"
+                
                 # Estimate audio duration (rough calculation)
                 # Average speaking rate is ~150 words per minute
                 words = len(text.split())
@@ -155,6 +168,7 @@ class OpenAITTS:
                 return {
                     'success': True,
                     'audio_data': audio_data,
+                    'audio_url': audio_url,
                     'audio_size_bytes': audio_size,
                     'audio_duration': estimated_duration,
                     'processing_time': processing_time,

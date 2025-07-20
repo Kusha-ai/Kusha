@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { Box } from '@mui/material'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
+import TTSTestPage from './pages/TTSTestPage'
 import AdminPage from './pages/AdminPage'
 import ResultsPage from './pages/ResultsPage'
 import ProviderDashboard from './pages/ProviderDashboard'
@@ -28,7 +29,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/test/asr" element={<HomePage />} />
-          <Route path="/test/tts" element={<HomePage />} />
+          <Route path="/test/tts" element={<TTSTestPage />} />
           <Route path="/test/ai" element={<HomePage />} />
           <Route path="/test/embedding" element={<HomePage />} />
           <Route path="/admin" element={<AdminPage />} />

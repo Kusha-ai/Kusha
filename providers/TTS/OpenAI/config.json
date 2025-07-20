@@ -6,6 +6,7 @@
     "base_url": "https://api.openai.com/v1",
     "requires_api_key": true,
     "api_key_type": "bearer",
+    "provider_type": "TTS",
     "icon_url": "https://openai.com/favicon.ico",
     "logo_url": "https://openai.com/content/images/2022/05/openai-avatar.png"
   },
