@@ -115,12 +115,6 @@ yarn-error.log*
 # Docker
 .dockerignore
 
-# Audio files (test files)
-*.wav
-*.mp3
-*.m4a
-*.flac
-*.ogg
 
 # API Keys and credentials
 credentials.json
