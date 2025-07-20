@@ -16,10 +16,16 @@ class ProviderManager:
         
         self.providers_dir = Path(providers_dir)
         self.providers = {}
+        self._provider_classes_cache = {}  # Cache for loaded provider classes
+        self._provider_instances_cache = {}  # Cache for provider instances
+        self._api_keys_cache = {}  # Cache for API keys to avoid database calls
         
         # Load centralized language pack
         self._load_language_pack()
         self._load_providers()
+        
+        # Warm up all providers at startup for optimal performance
+        self._warm_up_providers()
     
     def _load_language_pack(self):
         """Load centralized language pack"""
@@ -186,16 +192,46 @@ class ProviderManager:
         return models
     
     def get_provider_instance(self, provider_id: str, api_key: str = None):
-        """Get an instance of a provider class"""
+        """Get a cached instance of a provider class"""
         if provider_id not in self.providers:
             raise ValueError(f"Provider {provider_id} not found")
         
+        # Create cache key that includes API key for providers that need it
+        cache_key = f"{provider_id}_{api_key}" if api_key else provider_id
+        
+        # Return cached instance if available
+        if cache_key in self._provider_instances_cache:
+            return self._provider_instances_cache[cache_key]
+        
+        # Load provider class if not cached
+        if provider_id not in self._provider_classes_cache:
+            self._load_provider_class(provider_id)
+        
         provider_info = self.providers[provider_id]
         config = provider_info['config']
+        provider_class = self._provider_classes_cache[provider_id]
+        
+        try:
+            # Initialize the provider instance
+            if config['provider'].get('requires_api_key', True):
+                instance = provider_class(config, api_key)
+            else:
+                instance = provider_class(config)
+            
+            # Cache the instance
+            self._provider_instances_cache[cache_key] = instance
+            return instance
+            
+        except Exception as e:
+            raise Exception(f"Failed to instantiate provider {provider_id}: {e}")
+    
+    def _load_provider_class(self, provider_id: str):
+        """Load and cache a provider class"""
+        provider_info = self.providers[provider_id]
         impl_file = provider_info['impl_file']
         
         try:
-            # Dynamically import the provider module
+            # Dynamically import the provider module (only done once)
             spec = importlib.util.spec_from_file_location(f"{provider_id}_module", impl_file)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
@@ -212,14 +248,63 @@ class ProviderManager:
             
             provider_class = getattr(module, class_name)
             
-            # Initialize the provider
-            if config['provider'].get('requires_api_key', True):
-                return provider_class(config, api_key)
-            else:
-                return provider_class(config)
+            # Cache the class
+            self._provider_classes_cache[provider_id] = provider_class
             
         except Exception as e:
-            raise Exception(f"Failed to instantiate provider {provider_id}: {e}")
+            raise Exception(f"Failed to load provider class {provider_id}: {e}")
+    
+    def _warm_up_providers(self):
+        """Pre-load and warm up all provider classes for optimal performance"""
+        print("🔥 Warming up ASR providers...")
+        
+        for provider_id in self.providers.keys():
+            try:
+                # Pre-load the provider class
+                self._load_provider_class(provider_id)
+                
+                # For providers that don't require API keys, create a warmed instance
+                config = self.providers[provider_id]['config']
+                if not config['provider'].get('requires_api_key', True):
+                    # Create a warm instance without API key
+                    self.get_provider_instance(provider_id)
+                    print(f"✅ Warmed up {provider_id} (no API key required)")
+                else:
+                    print(f"⚡ Pre-loaded {provider_id} class (API key required for instance)")
+                    
+            except Exception as e:
+                print(f"⚠️  Failed to warm up {provider_id}: {e}")
+        
+        print(f"🚀 Provider warm-up complete! {len(self._provider_classes_cache)} classes loaded")
+    
+    def cache_api_key(self, provider_id: str, api_key: str):
+        """Cache an API key to avoid database calls"""
+        self._api_keys_cache[provider_id] = api_key
+        
+        # If we have a cached instance with this provider+key, it's still valid
+        # If not, create a new instance for faster subsequent access
+        if api_key:
+            try:
+                self.get_provider_instance(provider_id, api_key)
+            except Exception:
+                pass  # Ignore errors during pre-warming
+    
+    def get_cached_api_key(self, provider_id: str) -> Optional[str]:
+        """Get cached API key without database call"""
+        return self._api_keys_cache.get(provider_id)
+    
+    def clear_api_key_cache(self, provider_id: str = None):
+        """Clear API key cache (for a specific provider or all)"""
+        if provider_id:
+            self._api_keys_cache.pop(provider_id, None)
+            # Also clear related provider instances since API key changed
+            keys_to_remove = [k for k in self._provider_instances_cache.keys() if k.startswith(f"{provider_id}_")]
+            for key in keys_to_remove:
+                self._provider_instances_cache.pop(key, None)
+        else:
+            self._api_keys_cache.clear()
+            # Clear all instances since API keys changed
+            self._provider_instances_cache.clear()
     
     def get_provider_config(self, provider_id: str) -> Optional[Dict]:
         """Get the configuration for a specific provider"""

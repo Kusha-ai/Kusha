@@ -45,16 +45,17 @@ class SarvASR:
         Returns:
             Dictionary with transcription results
         """
-        start_time = time.time()
-        
         try:
             # Convert language code from 'hi-IN' format to 'hi' format for Sarv API
             sarv_language_code = language_code.split('-')[0] if '-' in language_code else language_code
             
-            # Prepare the request
+            # Open file outside timing (file I/O not included)
             files = {
                 'audio': open(audio_file_path, 'rb')
             }
+            
+            # Phase 1: Request preparation timing (only data preparation, no file I/O)
+            prep_start = time.time()
             
             data = {
                 'language': sarv_language_code
@@ -68,6 +69,11 @@ class SarvASR:
                     data['model_preference'] = 'hindi-multilingual'
                 # For multilingual model, let it auto-select
             
+            prep_time = time.time() - prep_start
+            
+            # Phase 2: Network request timing
+            network_start = time.time()
+            
             # Make request to Sarv ASR
             response = requests.post(
                 f"{self.base_url}/upload",
@@ -76,8 +82,15 @@ class SarvASR:
                 timeout=30
             )
             
-            processing_time = time.time() - start_time
+            network_time = time.time() - network_start
+            
+            # Response processing (file cleanup)
+            response_start = time.time()
             files['audio'].close()
+            response_time = time.time() - response_start
+            
+            # Use pure network time (matching direct API calls)
+            processing_time = network_time
             
             if response.status_code == 200:
                 result = response.json()
@@ -92,7 +105,14 @@ class SarvASR:
                     'processing_time': processing_time,
                     'model_used': result.get('model_used', model_id),
                     'real_time_factor': result.get('real_time_factor', None),
-                    'raw_response': result
+                    'raw_response': result,
+                    # Detailed timing breakdown
+                    'timing_phases': {
+                        'preparation_time': prep_time,  # Actual data preparation time (no file I/O)
+                        'network_time': network_time,
+                        'response_processing_time': response_time,
+                        'model_processing_time': result.get('processing_time', network_time)  # Server-side model time if available
+                    }
                 }
             else:
                 return {
@@ -101,19 +121,64 @@ class SarvASR:
                     'model_id': model_id,
                     'language_code': language_code,
                     'error': f"HTTP {response.status_code}: {response.text}",
-                    'processing_time': processing_time
+                    'processing_time': processing_time,
+                    'timing_phases': {
+                        'preparation_time': prep_time,
+                        'network_time': network_time,
+                        'response_processing_time': response_time,
+                        'model_processing_time': 0
+                    }
                 }
                 
         except Exception as e:
-            processing_time = time.time() - start_time
+            # If error occurred before timing started, set minimal processing time
+            processing_time = getattr(locals(), 'processing_time', 0.001)
+            prep_time = getattr(locals(), 'prep_time', 0.001)
+            network_time = getattr(locals(), 'network_time', 0)
+            response_time = getattr(locals(), 'response_time', 0)
+            
             return {
                 'success': False,
                 'provider': self.provider_name,
                 'model_id': model_id,
                 'language_code': language_code,
                 'error': str(e),
-                'processing_time': processing_time
+                'processing_time': processing_time,
+                'timing_phases': {
+                    'preparation_time': prep_time,
+                    'network_time': network_time,
+                    'response_processing_time': response_time,
+                    'model_processing_time': 0
+                }
             }
+    
+    def test_speed(self, audio_file_path: str, model_id: str, language_code: str = 'en-US') -> Dict:
+        """
+        Test processing speed by measuring total processing time around transcribe_audio call
+        
+        Args:
+            audio_file_path: Path to audio file
+            model_id: Model ID to use
+            language_code: Language code (e.g., 'en-US')
+            
+        Returns:
+            Dictionary with detailed timing information
+        """
+        total_start_time = time.time()
+        result = self.transcribe_audio(audio_file_path, model_id, language_code)
+        total_end_time = time.time()
+        
+        total_processing_time = total_end_time - total_start_time
+        api_processing_time = result.get('processing_time', 0.0)  # API call time from transcribe_audio
+        overhead_time = total_processing_time - api_processing_time
+        
+        # Update result with detailed timing
+        result['api_call_time'] = api_processing_time
+        result['total_processing_time'] = total_processing_time
+        result['overhead_time'] = overhead_time
+        result['processing_time'] = api_processing_time  # Keep for backward compatibility
+        
+        return result
     
     def test_connection(self) -> Dict[str, Any]:
         """Test connection to Sarv ASR service"""

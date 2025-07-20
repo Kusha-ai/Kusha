@@ -9,6 +9,7 @@ import sqlite3
 from pathlib import Path
 from typing import List, Dict, Optional
 from datetime import datetime
+from asyncio import create_task
 from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -28,6 +29,61 @@ from services.analytics_service import analytics_service
 # Initialize provider manager
 provider_manager = ProviderManager()
 
+# Background task queue for async operations
+background_tasks = set()
+
+# Async helper functions for non-blocking operations
+async def async_index_test_result(test_result: dict):
+    """Asynchronously index test result to Elasticsearch"""
+    try:
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, es_client.index_test_result, test_result)
+    except Exception as e:
+        print(f"Background Elasticsearch indexing failed: {e}")
+
+async def async_index_test_session(session_data: dict):
+    """Asynchronously index test session to Elasticsearch"""
+    try:
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, es_client.index_test_session, session_data)
+    except Exception as e:
+        print(f"Background Elasticsearch session indexing failed: {e}")
+
+async def async_save_test_result(provider: str, model_id: str, language_code: str, 
+                                audio_duration: float, processing_time: float, 
+                                transcription: str, confidence: float):
+    """Asynchronously save test result to database"""
+    try:
+        # Run in thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, db.save_test_result, 
+                                 provider, model_id, language_code, 
+                                 audio_duration, processing_time, 
+                                 transcription, confidence)
+    except Exception as e:
+        print(f"Background database save failed: {e}")
+
+def create_background_task(coro):
+    """Create and track background tasks"""
+    task = asyncio.create_task(coro)
+    background_tasks.add(task)
+    task.add_done_callback(background_tasks.discard)
+    return task
+
+def ensure_api_keys_cached():
+    """Ensure API keys are cached - call this if cache is empty"""
+    try:
+        if len(provider_manager._api_keys_cache) == 0:
+            all_api_keys = db.get_all_api_keys()
+            for provider_id, api_key in all_api_keys.items():
+                if provider_id and api_key:
+                    provider_manager.cache_api_key(provider_id, api_key)
+            print(f"🔄 Populated cache with {len(all_api_keys)} API keys")
+    except Exception as e:
+        print(f"⚠️ Failed to populate API key cache: {e}")
+
 load_dotenv()
 
 def get_audio_duration(file_path: str) -> float:
@@ -46,6 +102,24 @@ app = FastAPI(
     description="A comprehensive ASR speed testing application",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize caches and warm up providers for optimal performance"""
+    print("🚀 Starting ASR Speed Test application...")
+    
+    # Load API keys into provider manager cache to avoid database calls during requests
+    try:
+        all_api_keys = db.get_all_api_keys()  # Returns Dict[str, str]
+        for provider_id, api_key in all_api_keys.items():
+            if provider_id and api_key:
+                provider_manager.cache_api_key(provider_id, api_key)
+        
+        print(f"✅ Cached {len(all_api_keys)} API keys for fast access")
+    except Exception as e:
+        print(f"⚠️  Failed to cache API keys: {e}")
+    
+    print("🎯 ASR Speed Test ready - providers warmed up and optimized!")
 
 # Setup templates and static files
 templates = Jinja2Templates(directory="templates")
@@ -81,8 +155,9 @@ async def react_app():
         """
 
 # Initialize database with persistent volume path
-os.makedirs("/app/database", exist_ok=True)
-db = DatabaseManager(db_path="/app/database/asr_config.db")
+db_path = os.getenv('DATABASE_PATH', '/app/database/asr_config.db')
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
+db = DatabaseManager(db_path=db_path)
 
 @app.get("/", response_class=HTMLResponse)
 async def user_interface(request: Request):
@@ -113,7 +188,12 @@ async def get_providers(activated_only: bool = False):
         # Add API key status and activation status for each provider
         filtered_providers = []
         for provider in providers:
-            api_key = db.get_api_key(provider['id'])
+            # Use cached API key for performance
+            api_key = provider_manager.get_cached_api_key(provider['id'])
+            if not api_key:
+                api_key = db.get_api_key(provider['id'])
+                if api_key:
+                    provider_manager.cache_api_key(provider['id'], api_key)
             provider['hasApiKey'] = bool(api_key)
             
             # Check activation status
@@ -160,7 +240,12 @@ async def get_all_models():
         # Get available providers (those with API keys)
         available_providers = []
         for provider_id in provider_manager.get_provider_ids():
-            api_key = db.get_api_key(provider_id)
+            # Use cached API key for performance
+            api_key = provider_manager.get_cached_api_key(provider_id)
+            if not api_key:
+                api_key = db.get_api_key(provider_id)
+                if api_key:
+                    provider_manager.cache_api_key(provider_id, api_key)
             provider_config = provider_manager.get_provider_config(provider_id)
             if not provider_config['provider']['requires_api_key'] or api_key:
                 available_providers.append(provider_id)
@@ -169,7 +254,12 @@ async def get_all_models():
         
         # Add API key status to each model
         for model in models:
-            api_key = db.get_api_key(model['provider_id'])
+            # Use cached API key for performance
+            api_key = provider_manager.get_cached_api_key(model['provider_id'])
+            if not api_key:
+                api_key = db.get_api_key(model['provider_id'])
+                if api_key:
+                    provider_manager.cache_api_key(model['provider_id'], api_key)
             provider_config = provider_manager.get_provider_config(model['provider_id'])
             model['hasApiKey'] = not provider_config['provider']['requires_api_key'] or bool(api_key)
         
@@ -185,7 +275,12 @@ async def get_models_for_language(language_code: str):
         
         # Add API key status and activation status to each model
         for model in models:
-            api_key = db.get_api_key(model['provider_id'])
+            # Use cached API key for performance
+            api_key = provider_manager.get_cached_api_key(model['provider_id'])
+            if not api_key:
+                api_key = db.get_api_key(model['provider_id'])
+                if api_key:
+                    provider_manager.cache_api_key(model['provider_id'], api_key)
             provider_status = db.get_provider_status(model['provider_id'])
             
             model['hasApiKey'] = not model['requires_api_key'] or bool(api_key)
@@ -242,8 +337,13 @@ async def transcribe_audio(
         temp_file.write(content)
         temp_file.close()
         
-        # Get provider API key
-        api_key = db.get_api_key(provider)
+        # Get provider API key from cache (optimized)
+        ensure_api_keys_cached()  # Ensure cache is populated
+        api_key = provider_manager.get_cached_api_key(provider)
+        if not api_key:
+            api_key = db.get_api_key(provider)
+            if api_key:
+                provider_manager.cache_api_key(provider, api_key)
         provider_config = provider_manager.get_provider_config(provider)
         
         if not provider_config:
@@ -260,9 +360,9 @@ async def transcribe_audio(
         # Run transcription
         result = provider_instance.transcribe_audio(temp_file.name, model_id, language)
         
-        # Save result to database
+        # Save result to database asynchronously (non-blocking)
         if result['success']:
-            db.save_test_result(
+            create_background_task(async_save_test_result(
                 result['provider'],
                 result['model_id'],
                 result['language_code'],
@@ -270,7 +370,7 @@ async def transcribe_audio(
                 result['processing_time'],
                 result['transcription'],
                 result['confidence']
-            )
+            ))
         
         return result
         
@@ -315,7 +415,12 @@ async def test_all_providers(
         results = []
         
         for provider_id in provider_manager.get_provider_ids():
-            api_key = db.get_api_key(provider_id)
+            # Use cached API key for performance
+            api_key = provider_manager.get_cached_api_key(provider_id)
+            if not api_key:
+                api_key = db.get_api_key(provider_id)
+                if api_key:
+                    provider_manager.cache_api_key(provider_id, api_key)
             provider_config = provider_manager.get_provider_config(provider_id)
             
             if provider_config['provider']['requires_api_key'] and not api_key:
@@ -353,14 +458,16 @@ async def test_all_providers(
             os.unlink(temp_file.name)
 
 def test_single_model(args):
-    """Test a single model - designed to run in thread pool"""
+    """Test a single model - designed to run in thread pool (optimized)"""
     temp_file_path, model_info, language_code, api_key = args
     
     try:
         provider_id = model_info['provider_id']
         model_id = model_info['model_id']
+        start_time = time.time()
+        print(f"📊 Starting {provider_id}/{model_id}...")
         
-        # Get provider instance
+        # Get provider instance (uses cached classes and instances)
         provider_instance = provider_manager.get_provider_instance(provider_id, api_key)
         if not provider_instance:
             return {
@@ -371,10 +478,14 @@ def test_single_model(args):
                 'processing_time': 0.0
             }
         
-        # Run transcription
+        # Run transcription directly without double timing
         result = provider_instance.transcribe_audio(temp_file_path, model_id, language_code)
         result['provider_id'] = provider_id
         result['model_id'] = model_id
+        
+        end_time = time.time()
+        print(f"✅ {provider_id}/{model_id} completed in {end_time - start_time:.2f}s")
+        
         return result
         
     except Exception as e:
@@ -405,11 +516,13 @@ async def test_multiple_models(
     # Get all models for the language
     available_models = provider_manager.get_models_for_language(language)
     
-    # Filter to only selected models
+    # Filter to only selected models (using cached API keys for performance)
+    ensure_api_keys_cached()  # Ensure cache is populated
     selected_models = []
     for model in available_models:
         if model['id'] in selected_model_ids:
-            api_key = db.get_api_key(model['provider_id'])
+            # Use cached API key instead of database call (major performance improvement)
+            api_key = provider_manager.get_cached_api_key(model['provider_id'])
             if not model['requires_api_key'] or api_key:
                 model['api_key'] = api_key
                 selected_models.append(model)
@@ -460,9 +573,12 @@ async def test_multiple_models(
         session_id = str(uuid.uuid4())
         
         # Run all tests simultaneously using thread pool
+        print(f"🚀 Starting {len(test_args)} models in parallel...")
+        parallel_start = time.time()
         results = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(test_args)) as executor:
             futures = [executor.submit(test_single_model, args) for args in test_args]
+            print(f"⚡ All {len(futures)} tasks submitted to thread pool")
             
             for future in concurrent.futures.as_completed(futures):
                 try:
@@ -480,9 +596,9 @@ async def test_multiple_models(
                     
                     results.append(result)
                     
-                    # Save successful results to database
+                    # Save successful results to database asynchronously (non-blocking)
                     if result.get('success'):
-                        db.save_test_result(
+                        create_background_task(async_save_test_result(
                             result.get('provider', result.get('provider_id', 'unknown')),
                             result.get('model_id', 'unknown'),
                             language,
@@ -490,7 +606,7 @@ async def test_multiple_models(
                             result.get('processing_time', 0.0),
                             result.get('transcription', ''),
                             result.get('confidence', 0.0)
-                        )
+                        ))
                         
                         # Index to Elasticsearch
                         es_test_result = {
@@ -511,7 +627,8 @@ async def test_multiple_models(
                             'user_agent': request.headers.get('user-agent', ''),
                             'ip_address': request.client.host if request.client else '127.0.0.1'
                         }
-                        es_client.index_test_result(es_test_result)
+                        # Index to Elasticsearch asynchronously (non-blocking)
+                        create_background_task(async_index_test_result(es_test_result))
                     else:
                         # Index failed results too
                         es_test_result = {
@@ -532,7 +649,8 @@ async def test_multiple_models(
                             'user_agent': request.headers.get('user-agent', ''),
                             'ip_address': request.client.host if request.client else '127.0.0.1'
                         }
-                        es_client.index_test_result(es_test_result)
+                        # Index to Elasticsearch asynchronously (non-blocking)
+                        create_background_task(async_index_test_result(es_test_result))
                         
                 except Exception as e:
                     error_result = {
@@ -563,6 +681,9 @@ async def test_multiple_models(
                     }
                     es_client.index_test_result(es_test_result)
         
+        parallel_end = time.time()
+        print(f"✅ All models completed in {parallel_end - parallel_start:.2f}s")
+        
         # Index session summary
         successful_results = [r for r in results if r.get('success')]
         failed_results = [r for r in results if not r.get('success')]
@@ -584,7 +705,8 @@ async def test_multiple_models(
             'user_agent': request.headers.get('user-agent', ''),
             'ip_address': request.client.host if request.client else '127.0.0.1'
         }
-        es_client.index_test_session(session_data)
+        # Index session to Elasticsearch asynchronously (non-blocking)
+        create_background_task(async_index_test_session(session_data))
         
         return {"results": results, "session_id": session_id}
         

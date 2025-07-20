@@ -21,6 +21,13 @@ import {
 } from '@mui/icons-material'
 import { formatProcessingTime } from '../utils/timeFormat'
 
+interface TimingPhases {
+  preparation_time: number
+  network_time: number
+  response_processing_time: number
+  model_processing_time: number
+}
+
 interface TestResult {
   id: string
   modelId: string
@@ -30,6 +37,10 @@ interface TestResult {
   success: boolean
   transcription?: string
   processingTime?: number
+  api_call_time?: number
+  total_processing_time?: number
+  overhead_time?: number
+  timing_phases?: TimingPhases
   confidence?: number
   error?: string
 }
@@ -125,14 +136,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
   const successfulResults = results.filter(r => r.success)
   const failedResults = results.filter(r => !r.success)
   
-  // Sort by processing time (fastest first)
+  // Sort by API call time (fastest first)
   const sortedResults = [...successfulResults].sort((a, b) => 
-    (a.processingTime || 0) - (b.processingTime || 0)
+    (a.api_call_time || a.processingTime || 0) - (b.api_call_time || b.processingTime || 0)
   )
   
   const fastestResult = sortedResults[0]
-  const avgProcessingTime = successfulResults.length > 0 
-    ? successfulResults.reduce((sum, r) => sum + (r.processingTime || 0), 0) / successfulResults.length
+  const avgApiTime = successfulResults.length > 0 
+    ? successfulResults.reduce((sum, r) => sum + (r.api_call_time || r.processingTime || 0), 0) / successfulResults.length
+    : 0
+  const avgTotalTime = successfulResults.length > 0 
+    ? successfulResults.reduce((sum, r) => sum + (r.total_processing_time || r.processingTime || 0), 0) / successfulResults.length
     : 0
   
   return (
@@ -157,14 +171,19 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
           </Typography>
         </Paper>
         
-        {avgProcessingTime > 0 && (
+        {avgApiTime > 0 && (
           <Paper sx={{ p: 2, flex: 1, minWidth: 200, textAlign: 'center' }}>
             <Typography variant="h4" fontWeight="bold" color="success.main">
-              {avgProcessingTime.toFixed(2)}s
+              {avgApiTime.toFixed(2)}s
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Average Time
+              Avg API Time
             </Typography>
+            {avgTotalTime > avgApiTime && (
+              <Typography variant="caption" color="text.secondary">
+                ({avgTotalTime.toFixed(2)}s total)
+              </Typography>
+            )}
           </Paper>
         )}
         
@@ -177,7 +196,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
               Fastest Provider
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {formatProcessingTime(fastestResult.processingTime || 0)}
+              {formatProcessingTime(fastestResult.api_call_time || fastestResult.processingTime || 0)}
             </Typography>
           </Paper>
         )}
@@ -279,12 +298,24 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                     {result.processingTime ? (
                       <>
-                        <Chip
-                          label={formatProcessingTime(result.processingTime)}
-                          size="small"
-                          color={result === fastestResult ? 'success' : 'default'}
-                          variant={result === fastestResult ? 'filled' : 'outlined'}
-                        />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                          <Chip
+                            label={`API: ${formatProcessingTime(result.api_call_time || result.processingTime)}`}
+                            size="small"
+                            color={result === fastestResult ? 'success' : 'primary'}
+                            variant={result === fastestResult ? 'filled' : 'outlined'}
+                            sx={{ fontSize: '0.7rem', height: 22 }}
+                          />
+                          {result.total_processing_time && (
+                            <Chip
+                              label={`Total: ${formatProcessingTime(result.total_processing_time)}`}
+                              size="small"
+                              color="default"
+                              variant="outlined"
+                              sx={{ fontSize: '0.7rem', height: 22 }}
+                            />
+                          )}
+                        </Box>
                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
                           {result.provider}
                         </Typography>
@@ -320,88 +351,144 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
         </Table>
       </TableContainer>
       
-      {/* Timing Analysis by Provider */}
-      {successfulResults.length > 1 && (
+      {/* Timeline Chart for Model Performance */}
+      {successfulResults.length > 0 && (
         <Box sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 2 }}>
           <Typography variant="h6" fontWeight="600" sx={{ mb: 2 }}>
-            ⏱️ Processing Time Analysis
+            📊 Model Performance Timeline
           </Typography>
           
-          {/* Provider Timing Breakdown */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2, mb: 2 }}>
-            {Object.entries(
-              successfulResults.reduce((acc, result) => {
-                const provider = result.provider
-                if (!acc[provider]) {
-                  acc[provider] = []
+          {/* Timeline Chart */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {successfulResults
+              .sort((a, b) => (a.api_call_time || a.processingTime || 0) - (b.api_call_time || b.processingTime || 0))
+              .map((result, index) => {
+                const phases = result.timing_phases || {
+                  preparation_time: (result.overhead_time || 0) * 0.3,
+                  network_time: result.api_call_time || result.processingTime || 0,
+                  response_processing_time: (result.overhead_time || 0) * 0.7,
+                  model_processing_time: (result.api_call_time || result.processingTime || 0) * 0.8
                 }
-                acc[provider].push(result)
-                return acc
-              }, {} as Record<string, TestResult[]>)
-            ).map(([provider, providerResults]) => {
-              const avgTime = providerResults.reduce((sum, r) => sum + (r.processingTime || 0), 0) / providerResults.length
-              const minTime = Math.min(...providerResults.map(r => r.processingTime || 0))
-              const maxTime = Math.max(...providerResults.map(r => r.processingTime || 0))
-              
-              return (
-                <Paper key={provider} sx={{ p: 2, border: '1px solid', borderColor: 'grey.300' }}>
-                  <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1 }}>
-                    🏢 {provider}
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    <Typography variant="body2">
-                      📊 Average: <strong>{formatProcessingTime(avgTime)}</strong>
-                    </Typography>
-                    <Typography variant="body2">
-                      🚀 Fastest: <strong>{formatProcessingTime(minTime)}</strong>
-                    </Typography>
-                    <Typography variant="body2">
-                      🐌 Slowest: <strong>{formatProcessingTime(maxTime)}</strong>
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Models tested: {providerResults.length}
-                    </Typography>
-                  </Box>
-                  
-                  {/* Individual Model Times */}
-                  <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    <Typography variant="caption" fontWeight="600" color="primary.main">
-                      Model Performance:
-                    </Typography>
-                    {providerResults
-                      .sort((a, b) => (a.processingTime || 0) - (b.processingTime || 0))
-                      .map((result, index) => (
-                      <Box key={result.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
-                          {result.modelName}
-                        </Typography>
-                        <Chip
-                          label={formatProcessingTime(result.processingTime || 0)}
-                          size="small"
-                          color={index === 0 ? 'success' : 'default'}
-                          variant={index === 0 ? 'filled' : 'outlined'}
-                          sx={{ 
-                            fontSize: '0.6rem', 
-                            height: 20,
-                            '& .MuiChip-label': { px: 1 }
-                          }}
-                        />
+                
+                const totalTime = phases.preparation_time + phases.network_time + phases.response_processing_time
+                const maxTime = Math.max(...successfulResults.map(r => r.total_processing_time || r.processingTime || 0))
+                
+                return (
+                  <Box key={result.id} sx={{ mb: 2 }}>
+                    {/* Model Label */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <ProviderIcon
+                        provider_name={result.provider}
+                        provider_icon_url={result.provider_icon_url}
+                        size={20}
+                      />
+                      <Typography variant="body2" fontWeight="600" sx={{ minWidth: 200 }}>
+                        {result.provider} - {result.modelName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Total: {formatProcessingTime(totalTime)}
+                      </Typography>
+                    </Box>
+                    
+                    {/* Timeline Bar */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      width: '100%', 
+                      height: 24, 
+                      borderRadius: 1, 
+                      overflow: 'hidden',
+                      border: '1px solid #e0e0e0',
+                      position: 'relative'
+                    }}>
+                      {/* Preparation Phase */}
+                      <Box sx={{
+                        width: `${(phases.preparation_time / maxTime) * 100}%`,
+                        backgroundColor: '#ffeb3b', // Yellow
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minWidth: phases.preparation_time > 0 ? '2px' : '0px'
+                      }}>
+                        {phases.preparation_time > maxTime * 0.05 && (
+                          <Typography variant="caption" sx={{ fontSize: '0.6rem', color: '#333' }}>
+                            {formatProcessingTime(phases.preparation_time)}
+                          </Typography>
+                        )}
                       </Box>
-                    ))}
+                      
+                      {/* Network Phase */}
+                      <Box sx={{
+                        width: `${(phases.network_time / maxTime) * 100}%`,
+                        backgroundColor: '#2196f3', // Blue
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minWidth: phases.network_time > 0 ? '2px' : '0px'
+                      }}>
+                        {phases.network_time > maxTime * 0.05 && (
+                          <Typography variant="caption" sx={{ fontSize: '0.6rem', color: 'white' }}>
+                            {formatProcessingTime(phases.network_time)}
+                          </Typography>
+                        )}
+                      </Box>
+                      
+                      {/* Response Processing Phase */}
+                      <Box sx={{
+                        width: `${(phases.response_processing_time / maxTime) * 100}%`,
+                        backgroundColor: '#4caf50', // Green
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minWidth: phases.response_processing_time > 0 ? '2px' : '0px'
+                      }}>
+                        {phases.response_processing_time > maxTime * 0.05 && (
+                          <Typography variant="caption" sx={{ fontSize: '0.6rem', color: 'white' }}>
+                            {formatProcessingTime(phases.response_processing_time)}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                    
+                    {/* Phase Legend */}
+                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ width: 8, height: 8, backgroundColor: '#ffeb3b', borderRadius: '2px' }} />
+                        <Typography variant="caption">Prep: {formatProcessingTime(phases.preparation_time)}</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ width: 8, height: 8, backgroundColor: '#2196f3', borderRadius: '2px' }} />
+                        <Typography variant="caption">Network: {formatProcessingTime(phases.network_time)}</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ width: 8, height: 8, backgroundColor: '#4caf50', borderRadius: '2px' }} />
+                        <Typography variant="caption">Response: {formatProcessingTime(phases.response_processing_time)}</Typography>
+                      </Box>
+                    </Box>
                   </Box>
-                </Paper>
-              )
-            })}
+                )
+              })}
           </Box>
           
-          {/* Overall Summary */}
-          <Typography variant="body2" color="text.secondary">
-            📈 Tested {results.length} models across {Object.keys(successfulResults.reduce((acc, r) => ({...acc, [r.provider]: true}), {})).length} providers with {successfulResults.length} successful transcriptions.
-            {fastestResult && (
-              <> The fastest overall result was <strong>{fastestResult.provider}'s {fastestResult.modelName}</strong> 
-              in <strong>{formatProcessingTime(fastestResult.processingTime || 0)}</strong>.</>
-            )}
-          </Typography>
+          {/* Legend */}
+          <Box sx={{ mt: 2, p: 2, backgroundColor: 'white', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+            <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1 }}>
+              Timeline Phases:
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 12, height: 12, backgroundColor: '#ffeb3b', borderRadius: '2px' }} />
+                <Typography variant="body2">🔧 Preparation (File I/O, Request Setup)</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 12, height: 12, backgroundColor: '#2196f3', borderRadius: '2px' }} />
+                <Typography variant="body2">🌐 Network (API Request & Model Processing)</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 12, height: 12, backgroundColor: '#4caf50', borderRadius: '2px' }} />
+                <Typography variant="body2">⚙️ Response Processing (Cleanup & Parse)</Typography>
+              </Box>
+            </Box>
+          </Box>
         </Box>
       )}
       
