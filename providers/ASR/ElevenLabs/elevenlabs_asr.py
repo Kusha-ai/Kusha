@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 from typing import List, Dict, Optional
 import sys
 import os
@@ -40,6 +41,9 @@ class ElevenLabsASR:
     
     def transcribe_audio(self, audio_file_path: str, model_id: str, language_code: str = 'en') -> Dict:
         try:
+            # Phase 1: Request preparation
+            prep_start = time.time()
+            
             # ElevenLabs uses a different endpoint pattern
             url = f"{self.base_url}/speech-to-text"
             
@@ -55,30 +59,70 @@ class ElevenLabsASR:
                     'model_id': model_id
                 }
                 
+                prep_time = time.time() - prep_start
+                
+                # Phase 2: Network request
+                network_start = time.time()
                 response = requests.post(url, headers=self.headers, files=files, data=data)
+                network_time = time.time() - network_start
+                
+                # Phase 3: Response processing
+                response_start = time.time()
+                processing_time = network_time  # Total processing time for backward compatibility
+                response_time = time.time() - response_start
             
             if response.status_code == 200:
                 result = response.json()
                 return {
                     'success': True,
+                    'provider': self.provider_name,
+                    'model_id': model_id,
+                    'language_code': language_code,
                     'transcription': result.get('text', ''),
                     'confidence': result.get('confidence', 0.0),
+                    'processing_time': processing_time * 1000,  # Convert to milliseconds
+                    'timing_phases': {
+                        'preparation_time': prep_time * 1000,
+                        'network_time': network_time * 1000,
+                        'response_processing_time': response_time * 1000,
+                        'model_processing_time': network_time * 1000
+                    },
                     'error': None
                 }
             else:
                 return {
                     'success': False,
+                    'provider': self.provider_name,
+                    'model_id': model_id,
+                    'language_code': language_code,
                     'error': f"HTTP {response.status_code}: {response.text}",
                     'transcription': '',
-                    'confidence': 0.0
+                    'confidence': 0.0,
+                    'processing_time': 0,
+                    'timing_phases': {
+                        'preparation_time': 0,
+                        'network_time': 0,
+                        'response_processing_time': 0,
+                        'model_processing_time': 0
+                    }
                 }
         
         except Exception as e:
             return {
                 'success': False,
+                'provider': self.provider_name,
+                'model_id': model_id,
+                'language_code': language_code,
                 'error': str(e),
                 'transcription': '',
-                'confidence': 0.0
+                'confidence': 0.0,
+                'processing_time': 0,
+                'timing_phases': {
+                    'preparation_time': 0,
+                    'network_time': 0,
+                    'response_processing_time': 0,
+                    'model_processing_time': 0
+                }
             }
     
     def get_user_info(self) -> Dict:

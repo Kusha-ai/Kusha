@@ -29,13 +29,14 @@ class ProviderManager:
     def _load_language_pack(self):
         """Load centralized language pack"""
         try:
-            # Load language pack from config folder
-            language_pack_file = Path(__file__).parent.parent / 'config' / 'language_pack.json'
+            # Load language pack from src/config folder
+            language_pack_file = Path(__file__).parent.parent.parent / 'src' / 'config' / 'language_pack.json'
             
             if language_pack_file.exists():
                 with open(language_pack_file, 'r', encoding='utf-8') as f:
                     language_pack = json.load(f)
                     self.language_pack = language_pack.get('languages', {})
+                    print(f"✅ Loaded language pack with {len(self.language_pack)} languages")
             else:
                 print(f"Language pack not found: {language_pack_file}")
                 self.language_pack = {}
