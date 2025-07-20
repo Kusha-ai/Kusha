@@ -205,22 +205,6 @@ OPENAI_TTS_MODEL=tts-1-hd
 
 ---
 
-## 🎯 What's Next
-
-### Upcoming Features (v0.0.3)
-- **Voice Cloning**: Custom voice creation and management
-- **Batch Processing**: Multiple text processing in single request
-- **Audio Effects**: Post-processing effects and filters
-- **Voice Analytics**: Detailed voice performance metrics
-- **Mobile App Support**: React Native TTS integration
-
-### Long-term Roadmap
-- **Real-time Streaming**: Live TTS with streaming audio
-- **Voice Synthesis**: Custom voice model training
-- **Multi-modal**: Combined ASR + TTS workflows
-- **Enterprise Features**: Advanced analytics and reporting
-
----
 
 ## 🤝 Acknowledgments
 
